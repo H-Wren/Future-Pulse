@@ -1,0 +1,8 @@
+{
+  "name": "Future Pulse",
+  "description": "AI 算力边界与技术趋势智能监控 Agent，结合个人画像实现全天候生产力智能提效与工作流重构。",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
