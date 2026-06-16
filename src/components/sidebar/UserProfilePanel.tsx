@@ -1,3 +1,4 @@
+import { motion } from 'motion/react';
 import { FileText, Target, Zap, Loader2, UserCircle } from 'lucide-react';
 
 interface UserProfilePanelProps {
@@ -20,7 +21,12 @@ export default function UserProfilePanel({
   const isValid = resume.trim().length >= 20 && focus.trim().length >= 2;
 
   return (
-    <div className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-2xl shadow-sm border border-zinc-200 dark:border-slate-700/50 overflow-hidden">
+    <motion.div
+      initial={{ opacity: 0, x: -20 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ duration: 0.3 }}
+      className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-2xl shadow-sm border border-zinc-200 dark:border-slate-700/50 overflow-hidden"
+    >
       <div className="p-4 border-b border-zinc-100 dark:border-slate-700/50 bg-zinc-50/80 dark:bg-slate-800/90 flex items-center gap-2">
         <UserCircle className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
         <h2 className="font-semibold text-zinc-800 dark:text-slate-200 text-sm tracking-wide">
@@ -35,7 +41,9 @@ export default function UserProfilePanel({
               <FileText className="w-4 h-4 text-zinc-400 dark:text-slate-500" />
               当前简历能力域
             </div>
-            <span className="text-xs text-zinc-400 dark:text-slate-500 font-normal">{resume.length} 字</span>
+            <span className="text-xs text-zinc-400 dark:text-slate-500 font-normal">
+              {resume.length} 字
+            </span>
           </label>
           <textarea
             value={resume}
@@ -61,10 +69,12 @@ export default function UserProfilePanel({
           />
         </div>
 
-        <button
+        <motion.button
           onClick={onGenerate}
           disabled={isGenerating || !isValid}
-          className="w-full group relative flex items-center justify-center gap-2 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white py-3.5 px-4 rounded-xl font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg active:scale-[0.98]"
+          whileHover={isValid && !isGenerating ? { scale: 1.01 } : {}}
+          whileTap={isValid && !isGenerating ? { scale: 0.98 } : {}}
+          className="w-full group relative flex items-center justify-center gap-2 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white py-3.5 px-4 rounded-xl font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg"
         >
           {isGenerating ? (
             <>
@@ -77,8 +87,8 @@ export default function UserProfilePanel({
               生成算力边界专属报告
             </>
           )}
-        </button>
+        </motion.button>
       </div>
-    </div>
+    </motion.div>
   );
 }

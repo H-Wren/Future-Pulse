@@ -1,3 +1,4 @@
+import { AnimatePresence, motion } from 'motion/react';
 import { RefreshCw } from 'lucide-react';
 import ReportEmptyState from './ReportEmptyState';
 import ReportLoadingState from './ReportLoadingState';
@@ -24,23 +25,72 @@ export default function ReportOutput({
     <div className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-2xl shadow-sm border border-zinc-200 dark:border-slate-700/50 flex-1 flex flex-col min-h-[700px] overflow-hidden">
       <div className="p-4 border-b border-zinc-100 dark:border-slate-700/50 bg-zinc-50/80 dark:bg-slate-800/90 flex items-center justify-between shadow-sm z-10 relative">
         <div className="flex items-center gap-2">
-          <RefreshCw className={`w-4 h-4 text-indigo-600 dark:text-indigo-400 ${isGenerating ? 'animate-spin' : ''}`} />
+          <RefreshCw
+            className={`w-4 h-4 text-indigo-600 dark:text-indigo-400 ${isGenerating ? 'animate-spin' : ''}`}
+          />
           <h2 className="font-semibold text-zinc-800 dark:text-slate-200 text-sm tracking-wide">
             情报终端输出 (Intelligence Console)
           </h2>
         </div>
-        {report && !isGenerating && (
-          <span className="text-[11px] uppercase tracking-wider font-bold bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 px-2.5 py-1 rounded-md">
-            分析完成
-          </span>
-        )}
+        <AnimatePresence mode="wait">
+          {report && !isGenerating && (
+            <motion.span
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              className="text-[11px] uppercase tracking-wider font-bold bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 px-2.5 py-1 rounded-md"
+            >
+              分析完成
+            </motion.span>
+          )}
+        </AnimatePresence>
       </div>
 
       <div className="p-6 lg:p-10 flex-1 overflow-auto bg-white dark:bg-slate-900/60">
-        {status === 'error' && <ReportErrorState error={error} onRetry={onRetry} />}
-        {status === 'generating' && <ReportLoadingState />}
-        {status === 'complete' && report && <ReportContent content={report} />}
-        {status === 'idle' && !report && !error && <ReportEmptyState />}
+        <AnimatePresence mode="wait">
+          {status === 'error' && (
+            <motion.div
+              key="error"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.2 }}
+            >
+              <ReportErrorState error={error} onRetry={onRetry} />
+            </motion.div>
+          )}
+          {status === 'generating' && (
+            <motion.div
+              key="loading"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+            >
+              <ReportLoadingState />
+            </motion.div>
+          )}
+          {status === 'complete' && report && (
+            <motion.div
+              key="content"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.3 }}
+            >
+              <ReportContent content={report} />
+            </motion.div>
+          )}
+          {status === 'idle' && !report && !error && (
+            <motion.div
+              key="idle"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+            >
+              <ReportEmptyState />
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );

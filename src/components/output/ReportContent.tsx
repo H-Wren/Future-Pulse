@@ -1,3 +1,4 @@
+import { motion } from 'motion/react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
@@ -7,7 +8,10 @@ interface ReportContentProps {
 
 export default function ReportContent({ content }: ReportContentProps) {
   return (
-    <div
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.4, staggerChildren: 0.05 }}
       className="prose prose-zinc dark:prose-invert prose-sm sm:prose-base max-w-none
         prose-headings:font-bold prose-headings:tracking-tight prose-headings:text-zinc-900 dark:prose-headings:text-slate-100
         prose-h1:text-2xl prose-h1:border-b prose-h1:border-zinc-100 dark:prose-h1:border-slate-700 prose-h1:pb-4 prose-h1:mb-8
@@ -22,6 +26,6 @@ export default function ReportContent({ content }: ReportContentProps) {
         prose-a:text-indigo-600 dark:prose-a:text-indigo-400 prose-a:no-underline hover:prose-a:underline hover:prose-a:text-indigo-800 dark:hover:prose-a:text-indigo-300"
     >
       <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
-    </div>
+    </motion.div>
   );
 }

@@ -1,21 +1,59 @@
-import { Search } from 'lucide-react';
+import { motion } from 'motion/react';
+
+function SkeletonBlock({ className }: { className?: string }) {
+  return (
+    <motion.div
+      className={`bg-zinc-200 dark:bg-slate-700 rounded-lg ${className ?? ''}`}
+      animate={{ opacity: [0.3, 1, 0.3] }}
+      transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' as const }}
+    />
+  );
+}
 
 export default function ReportLoadingState() {
   return (
-    <div className="h-full flex flex-col items-center justify-center text-zinc-400 dark:text-slate-500 space-y-6 py-20">
-      <div className="relative">
-        <div className="w-20 h-20 border-4 border-zinc-100 dark:border-slate-700 rounded-2xl rotate-45 transform" />
-        <div className="w-20 h-20 border-4 border-indigo-600/80 dark:border-indigo-400/80 rounded-2xl rotate-45 transform border-t-transparent animate-spin absolute top-0 left-0" />
-        <Search className="w-6 h-6 text-indigo-500 dark:text-indigo-400 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      className="space-y-6 py-4"
+    >
+      {/* Title skeleton */}
+      <div className="space-y-3">
+        <SkeletonBlock className="h-8 w-2/3" />
+        <SkeletonBlock className="h-4 w-1/3" />
       </div>
-      <div className="text-center space-y-2">
-        <p className="text-sm font-medium text-zinc-600 dark:text-slate-300 tracking-wide">
-          正在调用 Google Search API 构建情报网...
-        </p>
-        <p className="text-xs text-zinc-400 dark:text-slate-500 max-w-xs mx-auto">
-          分析全球 AI 产品迭代动态，并运用 Gemini 模型与您的能力域进行深度对齐。
-        </p>
+
+      {/* Description skeleton */}
+      <div className="space-y-2">
+        <SkeletonBlock className="h-4 w-full" />
+        <SkeletonBlock className="h-4 w-5/6" />
+        <SkeletonBlock className="h-4 w-4/6" />
       </div>
-    </div>
+
+      {/* Table skeleton */}
+      <div className="space-y-2 pt-4">
+        <div className="flex gap-4">
+          <SkeletonBlock className="h-8 flex-1" />
+          <SkeletonBlock className="h-8 flex-1" />
+          <SkeletonBlock className="h-8 flex-1" />
+          <SkeletonBlock className="h-8 flex-[1.5]" />
+        </div>
+        {Array.from({ length: 3 }).map((_, i) => (
+          <div key={i} className="flex gap-4">
+            <SkeletonBlock className="h-6 flex-1" />
+            <SkeletonBlock className="h-6 flex-1" />
+            <SkeletonBlock className="h-6 flex-1" />
+            <SkeletonBlock className="h-6 flex-[1.5]" />
+          </div>
+        ))}
+      </div>
+
+      {/* Bullet points skeleton */}
+      <div className="space-y-2 pt-4">
+        <SkeletonBlock className="h-4 w-1/4" />
+        <SkeletonBlock className="h-4 w-full" />
+        <SkeletonBlock className="h-4 w-5/6" />
+      </div>
+    </motion.div>
   );
 }
