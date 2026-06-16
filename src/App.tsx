@@ -54,15 +54,10 @@ export default function App() {
   const handleLoadReport = (saved: SavedReport) => {
     setResume(saved.resumeSnippet.length > 0 ? saved.resumeSnippet : '');
     setFocus(saved.focus);
-
-    // Restore provider and model if possible
-    // Note: this is a simplified version - we just set the content
-    // A full version would reload the report into the output view
-    // For now, we'll set the resume/focus and let the user click generate
   };
 
   return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-slate-950 text-zinc-900 dark:text-slate-100 font-sans transition-colors">
+    <div className="min-h-screen bg-canvas text-text-primary font-sans transition-colors">
       <Header locale={locale} onToggleLocale={toggleLocale} />
 
       <MainLayout

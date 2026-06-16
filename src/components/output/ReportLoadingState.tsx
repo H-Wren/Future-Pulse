@@ -3,8 +3,8 @@ import { motion } from 'motion/react';
 function SkeletonBlock({ className }: { className?: string }) {
   return (
     <motion.div
-      className={`bg-zinc-200 dark:bg-slate-700 rounded-lg ${className ?? ''}`}
-      animate={{ opacity: [0.3, 1, 0.3] }}
+      className={`bg-border rounded-lg ${className ?? ''}`}
+      animate={{ opacity: [0.3, 0.6, 0.3] }}
       transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' as const }}
     />
   );
