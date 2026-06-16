@@ -1,1 +1,34 @@
 @import "tailwindcss";
+
+/* ===== Dark mode base overrides ===== */
+@custom-variant dark (&:where(.dark, .dark *));
+
+.dark {
+  color-scheme: dark;
+}
+
+/* ===== Selection colors ===== */
+::selection {
+  background-color: color-mix(in srgb, var(--color-indigo-500) 20%, transparent);
+  color: var(--color-indigo-900);
+}
+.dark ::selection {
+  background-color: color-mix(in srgb, var(--color-indigo-400) 30%, transparent);
+  color: var(--color-indigo-100);
+}
+
+/* ===== Scrollbar styling ===== */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-zinc-300);
+  border-radius: 3px;
+}
+.dark ::-webkit-scrollbar-thumb {
+  background: var(--color-slate-600);
+}
