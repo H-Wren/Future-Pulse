@@ -1,5 +1,6 @@
 import { useState, useCallback, useRef } from 'react';
-import { GoogleGenAI } from '@google/genai';
+import { PROVIDERS, getStoredApiKey, getStoredModel, storeModel } from '../utils/providers';
+import type { ProviderId } from '../utils/providers';
 import type { ReportStatus } from '../types/report';
 
 const DEFAULT_RESUME = `核心能力与经验：
@@ -14,11 +15,11 @@ const DEFAULT_FOCUS = '产品管理转型、工作流提效、结构化思维赋
 
 function buildPrompt(resume: string, focus: string): string {
   return `
-你是一个部署在 AI Studio 上的"AI 技术与算力边界监控 Agent"。你的任务是利用 Google Search 实时联网功能，每周为用户整理全球最前沿的 AI 进展，并结合用户的简历提供提效建议。
+你是一个部署在 AI Studio 上的"AI 技术与算力边界监控 Agent"。你的任务是利用搜索实时联网功能，每周为用户整理全球最前沿的 AI 进展，并结合用户的简历提供提效建议。
 
 当前时间：${new Date().toLocaleDateString()}（请重点检索过去 7 天内最新的 AI 动态）。
 
-第一阶段：联网情报收集 (Grounding)
+第一阶段：联网情报收集
 1. 搜索范围：重点检索过去 7 天内 Twitter (X)、YouTube、OpenAI Blog、Google DeepMind Blog、Anthropic News 的热点。
 2. 算力边界定义：不仅要报告"出了什么"，还要解释"它能做什么以前做不到的事"。
 3. 竞品对比表：横向对比 ChatGPT, Gemini, Claude, Claude Code, Codex, Grok, 豆包, DeepSeek。必须标明它们背后的研发公司，并列出本周的核心更新或独家绝活。
@@ -37,7 +38,7 @@ ${focus}
 3. 识别场景：将新出的 AI 功能与用户简历中的具体项目、职责、技术栈进行匹配。结合用户的"提效要求"和痛点诉求，为用户专属定制提效和业务重构方案。
 4. 流程重构：不仅是推荐工具，要给出一个具体的"AI 工作流"。
 
-输出格式必须严格遵循以下 Markdown 模板。请不要在标题中包含用户的真实姓名（使用"目标用户"或"专属"即可）。
+输出格式必须严格遵循以下 Markdown 模板。
 
 # 🗓️ AI 算力边界周报 (更新于: {{date}})
 
@@ -73,10 +74,46 @@ export function useGenerateReport() {
   const [report, setReport] = useState('');
   const [status, setStatus] = useState<ReportStatus>('idle');
   const [error, setError] = useState('');
+  const [providerId, setProviderId] = useState<ProviderId>('gemini');
+  const [model, setModel] = useState(PROVIDERS.gemini.defaultModel);
   const abortRef = useRef<AbortController | null>(null);
+
+  const handleProviderChange = useCallback((newProvider: ProviderId) => {
+    setProviderId(newProvider);
+    const stored = getStoredModel(newProvider);
+    if (stored && PROVIDERS[newProvider].models.includes(stored)) {
+      setModel(stored);
+    } else {
+      setModel(PROVIDERS[newProvider].defaultModel);
+    }
+  }, []);
+
+  const handleModelChange = useCallback((newModel: string) => {
+    setModel(newModel);
+    storeModel(providerId, newModel);
+  }, [providerId]);
 
   const generateReport = useCallback(async () => {
     if (!resume.trim() || !focus.trim()) return;
+
+    const provider = PROVIDERS[providerId];
+    const apiKey = getStoredApiKey(providerId);
+
+    // For Gemini, fall back to process.env.GEMINI_API_KEY
+    const resolvedKey =
+      apiKey || (providerId === 'gemini' ? (process.env.GEMINI_API_KEY as string) : '');
+
+    if (!resolvedKey && providerId === 'gemini') {
+      setError('GEMINI_API_KEY 未配置。请在 .env 文件中设置，或通过"配置 API Key"输入。');
+      setStatus('error');
+      return;
+    }
+
+    if (!resolvedKey) {
+      setError(`请在设置中配置 ${provider.name} 的 API Key。`);
+      setStatus('error');
+      return;
+    }
 
     setStatus('generating');
     setError('');
@@ -85,22 +122,16 @@ export function useGenerateReport() {
     abortRef.current = new AbortController();
 
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-
       const prompt = buildPrompt(resume, focus);
-
-      const responseStream = await ai.models.generateContentStream({
-        model: 'gemini-3.5-flash',
-        contents: prompt,
-        config: {
-          tools: [{ googleSearch: {} }],
-        },
+      const stream = provider.generateStream(prompt, {
+        apiKey: resolvedKey,
+        model,
       });
 
       let fullText = '';
-      for await (const chunk of responseStream) {
+      for await (const chunk of stream) {
         if (abortRef.current?.signal.aborted) break;
-        fullText += chunk.text;
+        fullText += chunk;
         setReport(fullText);
       }
 
@@ -117,7 +148,7 @@ export function useGenerateReport() {
       }
       abortRef.current = null;
     }
-  }, [resume, focus]);
+  }, [resume, focus, providerId, model]);
 
   const cancelGeneration = useCallback(() => {
     abortRef.current?.abort();
@@ -130,6 +161,8 @@ export function useGenerateReport() {
     setStatus('idle');
   }, []);
 
+  const currentProvider = PROVIDERS[providerId];
+
   return {
     resume,
     setResume,
@@ -138,6 +171,11 @@ export function useGenerateReport() {
     report,
     status,
     error,
+    providerId,
+    model,
+    currentProvider,
+    setModel: handleModelChange,
+    setProviderId: handleProviderChange,
     generateReport,
     cancelGeneration,
     reset,

@@ -1,8 +1,13 @@
 import { motion } from 'motion/react';
-import { Cpu, Moon, Sun } from 'lucide-react';
+import { Cpu, Moon, Sun, Languages } from 'lucide-react';
 import { useTheme } from '../utils/ThemeContext';
 
-export default function Header() {
+interface HeaderProps {
+  locale: 'zh' | 'en';
+  onToggleLocale: () => void;
+}
+
+export default function Header({ locale, onToggleLocale }: HeaderProps) {
   const { theme, toggleTheme } = useTheme();
 
   return (
@@ -32,7 +37,17 @@ export default function Header() {
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
+          <motion.button
+            onClick={onToggleLocale}
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-slate-800 transition-colors"
+            aria-label="切换语言"
+          >
+            <Languages className="w-3.5 h-3.5" />
+            {locale === 'zh' ? 'EN' : '中'}
+          </motion.button>
           <motion.button
             onClick={toggleTheme}
             whileHover={{ scale: 1.1 }}
