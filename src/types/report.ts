@@ -11,3 +11,13 @@ export interface GenerateReportParams {
   resume: string;
   focus: string;
 }
+
+export interface SavedReport {
+  id: string;
+  createdAt: number;
+  providerId: string;
+  model: string;
+  resumeSnippet: string;
+  focus: string;
+  content: string;
+}
