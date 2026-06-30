@@ -6,8 +6,8 @@ const zh: Record<string, string> = {
   'header.status.online': '系统就绪 · 直连深度求索',
 
   // Sidebar — UserProfilePanel
-  'sidebar.header': 'Intelligence Console',
-  'sidebar.apiKey': 'API Key',
+  'sidebar.header': '情报控制台',
+  'sidebar.apiKey': 'API 密钥',
   'sidebar.timeRange.label': '情报时间范围',
   'sidebar.provider.label': 'AI 模型',
   'sidebar.pdf.upload': '上传 PDF',

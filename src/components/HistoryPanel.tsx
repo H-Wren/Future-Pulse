@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Clock, Trash2, X, FileText, Loader2 } from 'lucide-react';
 import { getAllReports, deleteReport, clearAllReports } from '../utils/storage';
+import { isPublicMode } from '../hooks/useGenerateReport';
 import type { SavedReport } from '../types/report';
 
 interface HistoryPanelProps {
@@ -102,35 +103,37 @@ export default function HistoryPanel({ open, onClose, onLoadReport }: HistoryPan
                 </div>
               ) : (
                 reports.map((report, i) => (
-                  <motion.button
-                    key={report.id}
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: i * 0.03 }}
-                    onClick={() => handleLoad(report)}
-                    className="w-full text-left p-3.5 rounded-[6px] border-2 border-border bg-surface-subtle/30 hover:bg-surface-subtle hover:border-primary/40 transition-all group"
-                  >
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="flex-1 min-w-0">
-                        <p className="editorial-mono-caption text-text-muted">
-                          {new Date(report.createdAt).toLocaleString('zh-CN')}
-                        </p>
-                        <p className="editorial-mono-caption text-primary mt-1">
-                          {report.providerId} / {report.model}
-                        </p>
-                        <p className="editorial-body-sm text-text-secondary mt-1.5 truncate">
-                          {report.focus}
-                        </p>
+                    <motion.button
+                      key={report.id}
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: i * 0.03 }}
+                      onClick={() => handleLoad(report)}
+                      className="w-full text-left p-3.5 rounded-[6px] border-2 border-border bg-surface-subtle/30 hover:bg-surface-subtle hover:border-primary/40 transition-all group"
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex-1 min-w-0">
+                          <p className="editorial-mono-caption text-text-muted">
+                            {new Date(report.createdAt).toLocaleString('zh-CN')}
+                          </p>
+                          {!isPublicMode() && (
+                            <p className="editorial-mono-caption text-primary mt-1">
+                              {report.providerId} / {report.model}
+                            </p>
+                          )}
+                          <p className="editorial-body-sm text-text-secondary mt-1.5 line-clamp-2">
+                            {(report.content || '').replace(/^#.*$/gm, '').replace(/^>.*$/gm, '').replace(/^\*\*.*\*\*$/gm, '').replace(/^[-*] /gm, '').split('\n').filter((l) => l.trim().length > 10)[0]?.trim()?.slice(0, 120) || report.focus}
+                          </p>
+                        </div>
+                        <button
+                          onClick={(e) => handleDelete(report.id, e)}
+                          className="p-1.5 rounded-[4px] text-text-muted hover:text-danger opacity-0 group-hover:opacity-100 transition-all shrink-0"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </button>
                       </div>
-                      <button
-                        onClick={(e) => handleDelete(report.id, e)}
-                        className="p-1.5 rounded-[4px] text-text-muted hover:text-danger opacity-0 group-hover:opacity-100 transition-all shrink-0"
-                      >
-                        <Trash2 className="w-3 h-3" />
-                      </button>
-                    </div>
-                  </motion.button>
-                ))
+                    </motion.button>
+                  ))
               )}
             </div>
           </motion.div>
