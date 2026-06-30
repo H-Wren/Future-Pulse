@@ -1,29 +1,25 @@
-import { motion } from 'motion/react';
-import { Target } from 'lucide-react';
+import { Newspaper } from 'lucide-react';
 
 export default function ReportEmptyState() {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
-      className="h-full flex flex-col items-center justify-center text-text-muted space-y-5 py-20"
-    >
-      <motion.div
-        animate={{ rotate: [0, 3, 0] }}
-        transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
-        className="w-20 h-20 bg-surface-subtle rounded-2xl border border-border-light flex items-center justify-center shadow-inner"
-      >
-        <Target className="w-8 h-8 text-text-muted" />
-      </motion.div>
-      <div className="text-center space-y-1">
-        <p className="text-sm font-medium text-text-secondary tracking-wide">
-          终端已就绪，等待获取指令
-        </p>
-        <p className="text-xs text-text-muted">
-          填写左侧信息后点击生成，获取专属 AI 算力报告
-        </p>
+    <div className="flex flex-col items-center justify-center py-16 lg:py-24 text-center">
+      <div className="w-16 h-16 border-2 border-border rounded-[6px] flex items-center justify-center mb-6">
+        <Newspaper className="w-7 h-7 text-text-muted" />
       </div>
-    </motion.div>
+      <h3 className="editorial-heading-sm text-text-muted mb-2">
+        情报终端待命
+      </h3>
+      <p className="editorial-body-sm text-text-muted max-w-sm">
+        在左侧输入能力域资产与提效焦点，点击"生成情报报告"即可获取定制化 AI 算力边界分析。
+      </p>
+      <div className="flex gap-2 mt-6">
+        <span className="editorial-tag">Executive Summary</span>
+        <span className="editorial-tag">Key Findings</span>
+        <span className="editorial-tag">Action Items</span>
+      </div>
+      <div className="mt-8 font-mono text-[0.5625rem] tracking-[0.18em] uppercase text-text-muted border-2 border-dashed border-border rounded-[6px] px-4 py-2">
+        Ready &bull; Awaiting Input
+      </div>
+    </div>
   );
 }

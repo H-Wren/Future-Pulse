@@ -16,22 +16,60 @@ export interface AIProvider {
   generateStream(prompt: string, config: ProviderConfig): AsyncIterable<string>;
 }
 
-// ===== Gemini Provider =====
+// ===== Gemini Provider (REST API — supports AQ. keys) =====
 
 async function* geminiStream(prompt: string, config: ProviderConfig): AsyncIterable<string> {
-  const { GoogleGenAI } = await import('@google/genai');
-  const ai = new GoogleGenAI({ apiKey: config.apiKey });
+  const isAQKey = config.apiKey.startsWith('AQ.');
+  const url = isAQKey
+    ? `https://generativelanguage.googleapis.com/v1beta/models/${config.model}:streamGenerateContent?alt=sse`
+    : `https://generativelanguage.googleapis.com/v1beta/models/${config.model}:streamGenerateContent?alt=sse&key=${encodeURIComponent(config.apiKey)}`;
 
-  const responseStream = await ai.models.generateContentStream({
-    model: config.model,
-    contents: prompt,
-    config: {
-      tools: [{ googleSearch: {} }],
-    },
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  if (isAQKey) {
+    headers['Authorization'] = `Bearer ${config.apiKey}`;
+  }
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({
+      contents: [{ parts: [{ text: prompt }] }],
+    }),
   });
 
-  for await (const chunk of responseStream) {
-    yield chunk.text ?? '';
+  if (!response.ok) {
+    const err = await response.text();
+    throw new Error(`Gemini API error (${response.status}): ${err}`);
+  }
+
+  const reader = response.body?.getReader();
+  if (!reader) throw new Error('No response body');
+
+  const decoder = new TextDecoder();
+  let buffer = '';
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+
+    buffer += decoder.decode(value, { stream: true });
+    const lines = buffer.split('\n');
+    buffer = lines.pop() ?? '';
+
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (!trimmed.startsWith('data: ')) continue;
+      const data = trimmed.slice(6);
+      if (data === '[DONE]') return;
+
+      try {
+        const parsed = JSON.parse(data);
+        const text = parsed.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (text) yield text;
+      } catch {
+        // skip malformed chunks
+      }
+    }
   }
 }
 

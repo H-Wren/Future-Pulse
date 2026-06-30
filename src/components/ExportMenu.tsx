@@ -75,51 +75,47 @@ export default function ExportMenu({ content }: ExportMenuProps) {
     <div ref={menuRef} className="relative">
       <button
         onClick={() => setOpen(!open)}
-        className="flex items-center gap-1.5 text-xs font-medium text-text-secondary hover:text-text-primary bg-surface hover:bg-surface-subtle px-2.5 py-1.5 rounded-lg transition-colors"
+        className="font-mono text-[0.5625rem] font-[500] tracking-[0.14em] uppercase text-text-muted hover:text-text-primary px-2 py-1 rounded-[4px] hover:bg-surface-subtle transition-colors border border-transparent hover:border-border"
       >
-        <Download className="w-3.5 h-3.5" />
+        <Download className="w-3 h-3 inline mr-1 align-middle" />
         导出
       </button>
 
       <AnimatePresence>
         {open && (
           <motion.div
-            initial={{ opacity: 0, y: -5, scale: 0.95 }}
+            initial={{ opacity: 0, y: -4, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -5, scale: 0.95 }}
-            transition={{ duration: 0.15 }}
-            className="absolute right-0 top-full mt-1 w-44 bg-surface dark:bg-surface rounded-xl shadow-lg border border-border overflow-hidden z-20"
+            exit={{ opacity: 0, y: -4, scale: 0.95 }}
+            transition={{ duration: 0.12 }}
+            className="absolute right-0 top-full mt-1 w-40 bg-surface border-2 border-border rounded-[6px] overflow-hidden z-20"
           >
-            <button
-              onClick={downloadMarkdown}
-              className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-text-primary hover:bg-surface-subtle transition-colors"
+            <button onClick={downloadMarkdown}
+              className="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-[0.75rem] text-text-primary hover:bg-surface-subtle transition-colors font-[500]"
             >
-              <FileDown className="w-4 h-4 text-primary" />
-              Markdown (.md)
+              <FileDown className="w-3.5 h-3.5 text-primary shrink-0" />
+              Markdown
             </button>
-            <button
-              onClick={downloadText}
-              className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-text-primary hover:bg-surface-subtle transition-colors"
+            <button onClick={downloadText}
+              className="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-[0.75rem] text-text-primary hover:bg-surface-subtle transition-colors font-[500]"
             >
-              <FileText className="w-4 h-4 text-text-muted" />
-              纯文本 (.txt)
+              <FileText className="w-3.5 h-3.5 text-text-muted shrink-0" />
+              纯文本
             </button>
-            <button
-              onClick={copyToClipboard}
-              className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-text-primary hover:bg-surface-subtle transition-colors"
+            <button onClick={copyToClipboard}
+              className="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-[0.75rem] text-text-primary hover:bg-surface-subtle transition-colors font-[500]"
             >
               {copied ? (
-                <Check className="w-4 h-4 text-success" />
+                <Check className="w-3.5 h-3.5 text-success shrink-0" />
               ) : (
-                <Copy className="w-4 h-4 text-text-muted" />
+                <Copy className="w-3.5 h-3.5 text-text-muted shrink-0" />
               )}
-              {copied ? '已复制' : '复制到剪贴板'}
+              {copied ? '已复制' : '复制'}
             </button>
-            <button
-              onClick={printPdf}
-              className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-text-primary hover:bg-surface-subtle transition-colors border-t border-border-light"
+            <button onClick={printPdf}
+              className="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-[0.75rem] text-text-primary hover:bg-surface-subtle transition-colors font-[500] border-t-2 border-border-light"
             >
-              <FileText className="w-4 h-4 text-accent-gold" />
+              <FileText className="w-3.5 h-3.5 text-rose shrink-0" />
               打印 / PDF
             </button>
           </motion.div>

@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from 'motion/react';
-import { RefreshCw, Clock } from 'lucide-react';
+import { RefreshCw, Clock, Newspaper } from 'lucide-react';
 import ReportEmptyState from './ReportEmptyState';
 import ReportLoadingState from './ReportLoadingState';
 import ReportErrorState from './ReportErrorState';
@@ -25,15 +25,12 @@ export default function ReportOutput({
   onOpenHistory,
 }: ReportOutputProps) {
   return (
-    <div className="bg-surface/80 dark:bg-surface/80 backdrop-blur-sm rounded-2xl shadow-sm border border-border flex-1 flex flex-col min-h-[700px] overflow-hidden">
-      <div className="p-4 border-b border-border-light bg-surface-subtle flex items-center justify-between shadow-sm z-10 relative">
+    <div className="bg-surface border-2 border-border rounded-[6px] flex-1 flex flex-col min-h-[600px] overflow-hidden">
+      {/* Header bar */}
+      <div className="editorial-topbar">
         <div className="flex items-center gap-2">
-          <RefreshCw
-            className={`w-4 h-4 text-primary ${isGenerating ? 'animate-spin' : ''}`}
-          />
-          <h2 className="font-semibold text-text-primary text-sm tracking-wide">
-            情报终端输出 (Intelligence Console)
-          </h2>
+          <Newspaper className="w-3.5 h-3.5" />
+          <span>Intelligence Console</span>
         </div>
         <div className="flex items-center gap-2">
           <AnimatePresence mode="wait">
@@ -42,7 +39,7 @@ export default function ReportOutput({
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.9 }}
-                className="flex items-center gap-2"
+                transition={{ duration: 0.15 }}
               >
                 <ExportMenu content={report} />
               </motion.div>
@@ -51,21 +48,25 @@ export default function ReportOutput({
           {onOpenHistory && (
             <button
               onClick={onOpenHistory}
-              className="flex items-center gap-1.5 text-xs font-medium text-text-secondary hover:text-text-primary bg-surface hover:bg-surface-subtle px-2.5 py-1.5 rounded-lg transition-colors"
+              className="font-mono text-[0.5625rem] font-[500] tracking-[0.14em] uppercase text-text-muted hover:text-text-primary px-2 py-1 rounded-[4px] hover:bg-surface-subtle transition-colors"
             >
-              <Clock className="w-3.5 h-3.5" />
+              <Clock className="w-3 h-3 inline mr-1 align-middle" />
               历史
             </button>
           )}
           {report && !isGenerating && (
-            <span className="text-[11px] uppercase tracking-wider font-bold bg-accent-light text-accent-gold border border-accent-gold/20 px-2.5 py-1 rounded-md">
-              分析完成
+            <span className="font-mono text-[0.5rem] font-[500] tracking-[0.18em] uppercase text-success border-2 border-success/30 rounded-[4px] px-2 py-0.5 leading-none">
+              Complete
             </span>
+          )}
+          {isGenerating && (
+            <RefreshCw className="w-3 h-3 animate-spin text-primary" />
           )}
         </div>
       </div>
 
-      <div className="p-6 lg:p-10 flex-1 overflow-auto bg-surface">
+      {/* Content area */}
+      <div className="p-5 lg:p-8 flex-1 overflow-auto bg-[#f8f6f0] dark:bg-[#1e1c18]">
         <AnimatePresence mode="wait">
           {status === 'error' && (
             <motion.div
@@ -99,7 +100,7 @@ export default function ReportOutput({
               <ReportContent content={report} />
             </motion.div>
           )}
-          {status === 'idle' && !report && !error && (
+          {(status === 'idle' || (!report && !error && status !== 'generating' && status !== 'error')) && (
             <motion.div
               key="idle"
               initial={{ opacity: 0 }}

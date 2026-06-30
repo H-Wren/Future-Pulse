@@ -57,7 +57,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-canvas text-text-primary font-sans transition-colors">
+    <div className="min-h-screen bg-canvas text-text-primary transition-colors">
       <Header locale={locale} onToggleLocale={toggleLocale} />
 
       <MainLayout

@@ -14,56 +14,49 @@ export default function Header({ locale, onToggleLocale }: HeaderProps) {
     <motion.header
       initial={{ y: -20, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
-      transition={{ duration: 0.3 }}
-      className="bg-surface/80 dark:bg-surface/80 backdrop-blur-xl border-b border-border sticky top-0 z-10"
+      transition={{ duration: 0.4, ease: 'easeOut' }}
+      className="bg-surface border-b-2 border-border sticky top-0 z-10"
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-18 flex items-center justify-between">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+        {/* Brand */}
         <div className="flex items-center gap-3">
-          <motion.div
-            whileHover={{ rotate: 10 }}
-            className="bg-primary p-2.5 rounded-xl shadow-sm"
-          >
-            <Cpu className="w-5 h-5 text-surface" />
-          </motion.div>
+          <div className="flex items-center justify-center w-9 h-9 border-2 border-primary rounded-[6px]">
+            <Cpu className="w-4 h-4 text-primary" />
+          </div>
           <div>
-            <h1 className="text-xl font-bold tracking-tight text-text-primary">
-              Future Pulse{' '}
-              <span className="font-medium text-text-muted text-sm ml-2">
-                v2.0
+            <h1 className="text-base font-[500] tracking-tight text-text-primary leading-tight"
+                style={{ fontFamily: "'Source Serif 4', serif" }}>
+              Future Pulse
+              <span className="font-mono text-[0.625rem] tracking-wider uppercase text-text-muted ml-2 align-middle font-[500]">
+                v2
               </span>
             </h1>
-            <p className="text-xs text-text-secondary font-medium tracking-wide uppercase mt-0.5">
-              AI 算力监控与产品重构 Agent
+            <p className="font-mono text-[0.5625rem] tracking-[0.18em] uppercase text-text-muted mt-0.5 font-[500]">
+              AI Intelligence Console
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <motion.button
+
+        {/* Actions */}
+        <div className="flex items-center gap-1.5">
+          <button
             onClick={onToggleLocale}
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
-            className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium text-text-secondary hover:bg-surface-subtle transition-colors"
-            aria-label="切换语言"
+            className="font-mono text-[0.625rem] font-[500] tracking-[0.14em] uppercase px-2.5 py-1.5 rounded-[4px] text-text-muted hover:text-text-primary hover:bg-surface-subtle transition-colors border border-transparent hover:border-border"
+            aria-label="Toggle language"
           >
-            <Languages className="w-3.5 h-3.5" />
+            <Languages className="w-3 h-3 inline mr-1 align-middle" />
             {locale === 'zh' ? 'EN' : '中'}
-          </motion.button>
-          <motion.button
+          </button>
+          <button
             onClick={toggleTheme}
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
-            className="p-2 rounded-lg text-text-secondary hover:bg-surface-subtle transition-colors"
-            aria-label="切换主题"
+            className="p-1.5 rounded-[4px] text-text-muted hover:text-text-primary hover:bg-surface-subtle transition-colors"
+            aria-label="Toggle theme"
           >
-            {theme === 'dark' ? (
-              <Sun className="w-4 h-4" />
-            ) : (
-              <Moon className="w-4 h-4" />
-            )}
-          </motion.button>
-          <div className="flex items-center gap-2 text-xs font-mono font-medium text-success bg-success-glow px-3 py-1.5 rounded-full border border-success-border shadow-sm">
-            <span className="w-2 h-2 rounded-full bg-success animate-pulse shadow-[0_0_8px_rgba(74,140,108,0.6)]" />
-            System Online &amp; Grounded
+            {theme === 'dark' ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
+          </button>
+          <div className="ml-2 font-mono text-[0.5625rem] font-[500] tracking-[0.14em] uppercase text-success border-2 border-success/30 rounded-[4px] px-2.5 py-1 leading-none">
+            <span className="inline-block w-1.5 h-1.5 rounded-full bg-success mr-1.5 align-middle animate-pulse" />
+            Online
           </div>
         </div>
       </div>

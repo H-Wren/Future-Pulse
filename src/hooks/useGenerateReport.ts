@@ -14,8 +14,7 @@ const DEFAULT_RESUME = `核心能力与经验：
 const DEFAULT_FOCUS = '产品管理转型、工作流提效、结构化思维赋能';
 
 function buildPrompt(resume: string, focus: string): string {
-  return `
-你是一个部署在 AI Studio 上的"AI 技术与算力边界监控 Agent"。你的任务是利用搜索实时联网功能，每周为用户整理全球最前沿的 AI 进展，并结合用户的简历提供提效建议。
+  return `你是一个部署在 AI Studio 上的"AI 技术与算力边界监控 Agent"。你的任务是利用搜索实时联网功能，每周为用户整理全球最前沿的 AI 进展，并结合用户的简历提供提效建议。
 
 当前时间：${new Date().toLocaleDateString()}（请重点检索过去 7 天内最新的 AI 动态）。
 
@@ -38,15 +37,25 @@ ${focus}
 3. 识别场景：将新出的 AI 功能与用户简历中的具体项目、职责、技术栈进行匹配。结合用户的"提效要求"和痛点诉求，为用户专属定制提效和业务重构方案。
 4. 流程重构：不仅是推荐工具，要给出一个具体的"AI 工作流"。
 
-输出格式必须严格遵循以下 Markdown 模板。
+输出格式必须严格遵循以下 Markdown 模板 —— 使用清晰的层级结构，避免大段连续文字。
 
-# 🗓️ AI 算力边界周报 (更新于: {{date}})
+# 🗓️ AI 算力边界周报
+**{date}**
 
-### 🌟 本周技术之巅 (突破了什么？)
-* **[技术名]**：[描述] - **边界突破**：[以前做不到，现在能做的]
+## Executive Summary
+- 核心结论 1
+- 核心结论 2
+- 核心结论 3
 
-### ⚔️ 主流 AI 战力分布 (功能横评)
-| 模型 | 所属公司 | 本周更新 / 独有绝活 | 算力边界描述 |
+## 本周技术之巅
+### [技术名]
+> **边界突破**：以前做不到，现在能做的
+
+### [技术名]
+> ...
+
+## 主流 AI 战力分布
+| 模型 | 公司 | 本周更新 | 算力边界 |
 | :--- | :--- | :--- | :--- |
 | Gemini | Google | ... | ... |
 | ChatGPT | OpenAI | ... | ... |
@@ -57,15 +66,35 @@ ${focus}
 | 豆包 | 字节跳动 | ... | ... |
 | DeepSeek | 深度求索 | ... | ... |
 
-### 🛠️ 专属 AI 提效与重构方案 (精准对标需求)
-#### 匹配场景 A：[简历中的某个项目/职责/技能重点]
-- **新功能应用**：[具体功能]
-- **操作流程**：[Step 1 -> Step 2]
-- **核心价值**：[具体量化的效果 / 赋能增长点]
+## 市场动态
+- **事件**：描述 — 影响评估
 
-### 📈 本周趋势总结
-[基于上述的技术更新与迭代，总结行业目前正在发生的底层逻辑变化、流行应用趋势，以及如何影响知识工作者和产品构建者的范式变迁。]
-`;
+## 产品机会
+- **机会**：描述 — 建议行动
+
+## 风险分析
+- **风险**：描述 — 缓解措施
+
+## 建议行动
+- [ ] 行动项 1
+- [ ] 行动项 2
+- [ ] 行动项 3
+
+## 数据来源
+- 来源 1
+- 来源 2`;
+}
+
+/**
+ * Returns true when the app is deployed on Vercel and should
+ * proxy Gemini API calls through the serverless function.
+ */
+function useServerApi(): boolean {
+  try {
+    return (process.env.VITE_USE_SERVER_API as string) === 'true';
+  } catch {
+    return false;
+  }
 }
 
 export function useGenerateReport() {
@@ -99,7 +128,7 @@ export function useGenerateReport() {
     const provider = PROVIDERS[providerId];
     const apiKey = getStoredApiKey(providerId);
 
-    // For Gemini, fall back to process.env.GEMINI_API_KEY
+    // For Gemini, fall back to process.env (injected by Vite)
     const resolvedKey =
       apiKey || (providerId === 'gemini' ? (process.env.GEMINI_API_KEY as string) : '');
 
@@ -123,16 +152,24 @@ export function useGenerateReport() {
 
     try {
       const prompt = buildPrompt(resume, focus);
-      const stream = provider.generateStream(prompt, {
-        apiKey: resolvedKey,
-        model,
-      });
+      const shouldUseServerApi = useServerApi();
 
-      let fullText = '';
-      for await (const chunk of stream) {
-        if (abortRef.current?.signal.aborted) break;
-        fullText += chunk;
-        setReport(fullText);
+      if (shouldUseServerApi && providerId === 'gemini') {
+        // Use the Vercel serverless API proxy
+        await generateViaServerApi(prompt);
+      } else {
+        // Use direct API call (local dev or non-Gemini providers)
+        const stream = provider.generateStream(prompt, {
+          apiKey: resolvedKey,
+          model,
+        });
+
+        let fullText = '';
+        for await (const chunk of stream) {
+          if (abortRef.current?.signal.aborted) break;
+          fullText += chunk;
+          setReport(fullText);
+        }
       }
 
       if (!abortRef.current?.signal.aborted) {
@@ -149,6 +186,56 @@ export function useGenerateReport() {
       abortRef.current = null;
     }
   }, [resume, focus, providerId, model]);
+
+  /** Proxy generation through the Vercel serverless function */
+  const generateViaServerApi = async (prompt: string) => {
+    const response = await fetch('/api/gemini', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt, model }),
+      signal: abortRef.current?.signal,
+    });
+
+    if (!response.ok) {
+      const data = await response.json().catch(() => ({}));
+      throw new Error(data.error || `Server error (${response.status})`);
+    }
+
+    // Parse SSE stream from the server proxy
+    const reader = response.body?.getReader();
+    if (!reader) throw new Error('No response body');
+
+    const decoder = new TextDecoder();
+    let buffer = '';
+    let fullText = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop() ?? '';
+
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (!trimmed.startsWith('data: ')) continue;
+        const data = trimmed.slice(6);
+        if (data === '[DONE]') return;
+
+        try {
+          const parsed = JSON.parse(data);
+          const text = parsed.candidates?.[0]?.content?.parts?.[0]?.text;
+          if (text) {
+            fullText += text;
+            setReport(fullText);
+          }
+        } catch {
+          // skip malformed chunks
+        }
+      }
+    }
+  };
 
   const cancelGeneration = useCallback(() => {
     abortRef.current?.abort();

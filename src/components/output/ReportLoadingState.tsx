@@ -1,59 +1,31 @@
-import { motion } from 'motion/react';
-
-function SkeletonBlock({ className }: { className?: string }) {
-  return (
-    <motion.div
-      className={`bg-border rounded-lg ${className ?? ''}`}
-      animate={{ opacity: [0.3, 0.6, 0.3] }}
-      transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' as const }}
-    />
-  );
-}
+import { Loader2 } from 'lucide-react';
 
 export default function ReportLoadingState() {
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      className="space-y-6 py-4"
-    >
-      {/* Title skeleton */}
-      <div className="space-y-3">
-        <SkeletonBlock className="h-8 w-2/3" />
-        <SkeletonBlock className="h-4 w-1/3" />
+    <div className="flex flex-col items-center justify-center py-16 lg:py-24">
+      <div className="flex items-center gap-3 mb-8">
+        <Loader2 className="w-5 h-5 animate-spin text-primary" />
+        <span className="font-mono text-[0.625rem] font-[500] tracking-[0.18em] uppercase text-primary">
+          Processing Intelligence
+        </span>
       </div>
 
-      {/* Description skeleton */}
-      <div className="space-y-2">
-        <SkeletonBlock className="h-4 w-full" />
-        <SkeletonBlock className="h-4 w-5/6" />
-        <SkeletonBlock className="h-4 w-4/6" />
-      </div>
-
-      {/* Table skeleton */}
-      <div className="space-y-2 pt-4">
-        <div className="flex gap-4">
-          <SkeletonBlock className="h-8 flex-1" />
-          <SkeletonBlock className="h-8 flex-1" />
-          <SkeletonBlock className="h-8 flex-1" />
-          <SkeletonBlock className="h-8 flex-[1.5]" />
+      {/* Skeleton blocks */}
+      <div className="w-full max-w-lg space-y-4 animate-fade-in">
+        <div className="h-6 bg-surface-subtle border border-border rounded-[4px] w-3/4" />
+        <div className="space-y-2.5">
+          <div className="h-4 bg-surface-subtle border border-border rounded-[3px] w-full" />
+          <div className="h-4 bg-surface-subtle border border-border rounded-[3px] w-5/6" />
+          <div className="h-4 bg-surface-subtle border border-border rounded-[3px] w-4/6" />
         </div>
-        {Array.from({ length: 3 }).map((_, i) => (
-          <div key={i} className="flex gap-4">
-            <SkeletonBlock className="h-6 flex-1" />
-            <SkeletonBlock className="h-6 flex-1" />
-            <SkeletonBlock className="h-6 flex-1" />
-            <SkeletonBlock className="h-6 flex-[1.5]" />
-          </div>
-        ))}
+        <div className="h-4 bg-surface-subtle border border-border rounded-[3px] w-2/3 mt-6" />
+        <hr className="editorial-rule my-6" />
+        <div className="grid grid-cols-3 gap-3">
+          <div className="h-16 bg-surface-subtle border border-border rounded-[6px]" />
+          <div className="h-16 bg-surface-subtle border border-border rounded-[6px]" />
+          <div className="h-16 bg-surface-subtle border border-border rounded-[6px]" />
+        </div>
       </div>
-
-      {/* Bullet points skeleton */}
-      <div className="space-y-2 pt-4">
-        <SkeletonBlock className="h-4 w-1/4" />
-        <SkeletonBlock className="h-4 w-full" />
-        <SkeletonBlock className="h-4 w-5/6" />
-      </div>
-    </motion.div>
+    </div>
   );
 }
