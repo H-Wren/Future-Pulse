@@ -103,8 +103,8 @@ export function useGenerateReport() {
   const [report, setReport] = useState('');
   const [status, setStatus] = useState<ReportStatus>('idle');
   const [error, setError] = useState('');
-  const [providerId, setProviderId] = useState<ProviderId>('gemini');
-  const [model, setModel] = useState(PROVIDERS.gemini.defaultModel);
+  const [providerId, setProviderId] = useState<ProviderId>('deepseek');
+  const [model, setModel] = useState(PROVIDERS.deepseek.defaultModel);
   const abortRef = useRef<AbortController | null>(null);
 
   const handleProviderChange = useCallback((newProvider: ProviderId) => {
@@ -128,12 +128,14 @@ export function useGenerateReport() {
     const provider = PROVIDERS[providerId];
     const apiKey = getStoredApiKey(providerId);
 
-    // For Gemini, fall back to process.env (injected by Vite)
+    // Fall back to process.env (injected by Vite) for local dev
     const resolvedKey =
-      apiKey || (providerId === 'gemini' ? (process.env.GEMINI_API_KEY as string) : '');
+      apiKey
+      || (providerId === 'gemini' ? (process.env.GEMINI_API_KEY as string) : '')
+      || (providerId === 'deepseek' ? (process.env.DEEPSEEK_API_KEY as string) : '');
 
-    if (!resolvedKey && providerId === 'gemini') {
-      setError('GEMINI_API_KEY 未配置。请在 .env 文件中设置，或通过"配置 API Key"输入。');
+    if (!resolvedKey) {
+      setError(`${provider.name} API Key 未配置。请在 .env 文件中设置，或通过"配置 API Key"输入。`);
       setStatus('error');
       return;
     }
@@ -154,9 +156,10 @@ export function useGenerateReport() {
       const prompt = buildPrompt(resume, focus);
       const shouldUseServerApi = useServerApi();
 
-      if (shouldUseServerApi && providerId === 'gemini') {
+      if (shouldUseServerApi && (providerId === 'gemini' || providerId === 'deepseek')) {
         // Use the Vercel serverless API proxy
-        await generateViaServerApi(prompt);
+        const proxyPath = providerId === 'deepseek' ? '/api/deepseek' : '/api/gemini';
+        await generateViaServerApi(prompt, proxyPath);
       } else {
         // Use direct API call (local dev or non-Gemini providers)
         const stream = provider.generateStream(prompt, {
@@ -188,8 +191,8 @@ export function useGenerateReport() {
   }, [resume, focus, providerId, model]);
 
   /** Proxy generation through the Vercel serverless function */
-  const generateViaServerApi = async (prompt: string) => {
-    const response = await fetch('/api/gemini', {
+  const generateViaServerApi = async (prompt: string, proxyPath: string) => {
+    const response = await fetch(proxyPath, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ prompt, model }),
