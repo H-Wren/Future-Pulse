@@ -1,6 +1,6 @@
 const zh: Record<string, string> = {
   'app.title': 'Future Pulse',
-  'app.subtitle': 'AI 技术情报终端',
+  'app.subtitle': '个人 AI 情报工作台',
   'app.version': 'v3.0',
 
   'header.status.online': '系统就绪 · 直连深度求索',

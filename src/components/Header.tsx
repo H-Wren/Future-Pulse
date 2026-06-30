@@ -15,8 +15,8 @@ export default function Header({ locale, onToggleLocale }: HeaderProps) {
   // Sync document title with locale
   useEffect(() => {
     document.title = locale === 'zh'
-      ? 'Future Pulse — AI 技术情报终端'
-      : 'Future Pulse — AI Intelligence Terminal';
+      ? 'Future Pulse — 个人 AI 情报工作台'
+      : 'Future Pulse — Personal AI Intelligence Cockpit';
   }, [locale]);
 
   return (

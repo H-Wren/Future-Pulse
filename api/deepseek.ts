@@ -10,7 +10,20 @@
 
 import type { IncomingMessage, ServerResponse } from 'node:http';
 
-export default async function handler(req: IncomingMessage, res: ServerResponse) {
+type ApiRequest = IncomingMessage & {
+  body?: {
+    prompt?: string;
+    model?: string;
+  };
+};
+
+type ApiResponse = ServerResponse & {
+  status(code: number): ApiResponse;
+  json(body: unknown): void;
+  flush?: () => void;
+};
+
+export default async function handler(req: ApiRequest, res: ApiResponse) {
   // CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -112,7 +125,6 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
           // skip unparseable chunks
         }
       }
-      // @ts-ignore
       res.flush?.();
     }
   } catch (err: any) {

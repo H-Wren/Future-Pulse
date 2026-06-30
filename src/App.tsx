@@ -58,7 +58,6 @@ export default function App() {
             onModelChange={setModel}
             onOpenApiKeys={() => setApiKeyModalOpen(true)}
             publicMode={PUBLIC_MODE}
-            t={t}
           />
         }
         content={

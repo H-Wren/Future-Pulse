@@ -157,13 +157,21 @@ function useServerApi(): boolean {
 
 /**
  * Returns true when the app is running in public mode.
- * In public mode, API key UI is hidden and the API key is baked into the build.
+ * In public mode, API key UI is hidden and requests go through the Worker proxy.
  */
 export function isPublicMode(): boolean {
   try {
     return (process.env.VITE_PUBLIC_MODE as string) === 'true';
   } catch {
     return false;
+  }
+}
+
+function getWorkerUrl(): string {
+  try {
+    return ((process.env.VITE_WORKER_URL as string) || '').replace(/\/$/, '');
+  } catch {
+    return '';
   }
 }
 
@@ -205,8 +213,7 @@ export function useGenerateReport() {
       const apiKey = getStoredApiKey(providerId);
       const resolvedKey =
         apiKey
-        || (providerId === 'gemini' ? (process.env.GEMINI_API_KEY as string) : '')
-        || (providerId === 'deepseek' ? (process.env.VITE_DEEPSEEK_API_KEY as string) : '');
+        || (providerId === 'gemini' ? (process.env.GEMINI_API_KEY as string) : '');
 
       if (!resolvedKey) {
         setError(`${provider.name} API Key 未配置。请在 .env 文件中设置，或通过"配置 API Key"输入。`);
@@ -224,40 +231,18 @@ export function useGenerateReport() {
     try {
       const prompt = buildPrompt(resume, focus, timeRange, reportLang);
 
-      // Resolve API key: public mode uses baked-in key, otherwise localStorage or env
+      // Resolve API key for local development. Public mode uses the Worker proxy.
       const apiKey = publicMode
-        ? (process.env.VITE_DEEPSEEK_API_KEY as string) || ''
+        ? ''
         : (getStoredApiKey(providerId)
-            || (providerId === 'gemini' ? (process.env.GEMINI_API_KEY as string) : '')
-            || (providerId === 'deepseek' ? (process.env.VITE_DEEPSEEK_API_KEY as string) : ''));
-
-      // Quick connectivity test (public mode only)
-      if (publicMode) {
-        try {
-          const testResp = await fetch('https://api.deepseek.com/v1/models', {
-            headers: { Authorization: `Bearer ${apiKey}` },
-            signal: AbortSignal.timeout(8000),
-          });
-          console.log('[Future Pulse] API reachable, status:', testResp.status);
-        } catch (netErr: any) {
-          console.error('[Future Pulse] API unreachable:', netErr.message || netErr);
-          throw new Error(`网络不通：无法连接 DeepSeek API（${netErr.message || '超时'}）。请检查网络或尝试 VPN。`);
-        }
-      }
+            || (providerId === 'gemini' ? (process.env.GEMINI_API_KEY as string) : ''));
 
       if (publicMode) {
-        // Public mode: direct API call with baked-in key (no proxy needed)
-        const stream = provider.generateStream(prompt, {
-          apiKey,
-          model,
-        });
-
-        let fullText = '';
-        for await (const chunk of stream) {
-          if (abortRef.current?.signal.aborted) break;
-          fullText += chunk;
-          setReport(fullText);
+        const workerUrl = getWorkerUrl();
+        if (!workerUrl) {
+          throw new Error('公开模式未配置 VITE_WORKER_URL，无法通过 Cloudflare Worker 生成报告。');
         }
+        await generateViaServerApi(prompt, `${workerUrl}/api/deepseek`);
       } else if (useServerApi() && (providerId === 'gemini' || providerId === 'deepseek')) {
         // Use the Vercel serverless API proxy
         const proxyPath = providerId === 'deepseek' ? '/api/deepseek' : '/api/gemini';

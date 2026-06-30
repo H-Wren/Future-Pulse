@@ -194,7 +194,7 @@ export default function UserProfilePanel({
               <FileText className="w-3 h-3" />
               {t('sidebar.resume.label')}
             </span>
-            <span className="tabular-nums">{resume.length}c</span>
+            <span className="tabular-nums">{t('common.charCount', { count: resume.length })}</span>
           </label>
 
           {/* PDF Upload Row */}

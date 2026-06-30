@@ -1,107 +1,151 @@
-# Future Pulse — AI 算力边界情报站
+# Future Pulse — Personal AI Intelligence Cockpit
 
-**AI 技术趋势智能监控平台** — 结合个人技能画像，自动生成情报分析报告，帮你把握 AI 算力边界与工作流重构机会。
+Future Pulse 是一个个人 AI 技术情报与机会匹配工作台。它不是面向大众的 AI 周报 SaaS，而是把固定信源、个人能力画像、时间范围和报告结构产品化，用来持续追踪 AI 技术变化，并把变化转译成可执行的学习、项目和职业行动。
 
-[![GitHub Pages](https://img.shields.io/badge/在线访问-GitHub%20Pages-2e4a2a)](https://h-wren.github.io/Future-Pulse/)
+> Portfolio note: this project demonstrates AI workflow productization, frontend implementation, prompt architecture, local PDF parsing, bilingual UI, deployment security, and a calm editorial interface system.
 
----
+## Product Positioning
 
-## ✨ 功能
+普通 LLM 已经可以生成“一份 AI 周报”。Future Pulse 的价值不在于替代聊天框，而在于把一个长期重复的个人工作流固定下来：
 
-- **📡 权威信源聚合** — 官方博客、创始人 X/Twitter、arXiv 论文、GitHub Trending
-- **📄 PDF 简历上传** — 客户端本地解析，隐私安全
-- **⏱️ 时间范围选择** — 3 天 / 1 周 / 1 个月 / 3 个月
-- **🌐 双语报告** — 中文 / English，UI 完整国际化
-- **📝 流式输出** — 实时查看 AI 生成过程
-- **📤 报告导出** — Markdown / 纯文本 / 剪贴板
-- **🎨 Editorial Forest 设计** — 森林绿 + 尘埃粉 + Source Serif 衬线字体
-- **🌙 暗色模式** — 自动跟随系统 + 手动切换
-- **🔑 零配置使用** — 打开即用，无需自备 API Key
+- 保存个人能力画像、关注方向和报告结构
+- 按 3 天 / 1 周 / 1 个月 / 3 个月生成不同粒度的技术情报
+- 将 AI 进展映射到个人机会、能力差距和下一步行动
+- 支持中英文报告、PDF 简历本地解析和 Markdown 导出
+- 用统一 UI 降低每次整理情报的上下文切换成本
 
-## 🌍 访问
+## What It Demonstrates
 
-**[h-wren.github.io/Future-Pulse](https://h-wren.github.io/Future-Pulse/)** — 国内免 VPN，打开即用。
+- **AI workflow productization**: 把 prompt、用户画像、时间范围和输出格式封装成可重复使用的工作台
+- **Personalization layer**: 简历 / 技能 / 关注领域参与报告生成，而不是通用新闻摘要
+- **Local-first privacy**: PDF 在浏览器本地解析，无数据库、无用户追踪
+- **Provider abstraction**: DeepSeek / Gemini / OpenAI / Claude / Moonshot 的统一调用接口
+- **Secure deployment boundary**: 公开部署不把 API Key 打进前端；需要通过 Worker 或 Serverless 代理
+- **Editorial interface design**: 森林绿、暖纸色、衬线标题和紧凑控制台布局
 
-## 🚀 本地开发
+## Features
+
+- 权威信源提示：官方博客、创始人 X/Twitter、arXiv、GitHub Trending、Hugging Face
+- PDF 简历上传：客户端本地解析，提取后合并到个人画像
+- 时间范围选择：3 天 / 1 周 / 1 个月 / 3 个月
+- 双语报告：中文 / English
+- 流式输出：实时查看生成过程
+- 导出能力：Markdown / 纯文本 / 剪贴板 / 打印 PDF
+- 暗色模式：自动跟随系统 + 手动切换
+- API Key 管理：本地开发可在浏览器端保存自己的 Provider Key
+
+## Local Development
 
 ```bash
 npm install
-cp .env.example .env.local   # 填入 DEEPSEEK_API_KEY
-npm run dev                   # http://localhost:3000
+cp .env.example .env.local
+npm run dev
 ```
 
-## 📦 部署
+默认本地端口：
 
-### GitHub Pages（当前方案）
+```text
+http://localhost:3000
+```
+
+本地开发可以使用两种方式：
+
+- 在 `.env.local` 中配置服务端 Key，例如 `DEEPSEEK_API_KEY`
+- 或在应用内打开 API Key 配置弹窗，填入自己的 Provider Key
+
+## Deployment Notes
+
+This is primarily a personal workflow and portfolio project. If deployed publicly, do not expose your private model API key in frontend JavaScript.
+
+### GitHub Pages
+
+GitHub Pages 是静态托管，不能安全保存服务端密钥。公开部署时应使用 Cloudflare Worker 代理：
 
 ```bash
-# 设置环境变量
-echo "VITE_PUBLIC_MODE=true" > .env
-echo "VITE_DEEPSEEK_API_KEY=sk-xxx" >> .env
+# .env
+VITE_PUBLIC_MODE=true
+VITE_WORKER_URL=https://your-worker.workers.dev
 
-# 构建并部署
 npm run build
-# 将 dist/ 推送到 gh-pages 分支
 ```
 
-### Vercel（备用）
+Then publish `dist/` to the `gh-pages` branch.
+
+### Vercel
+
+Vercel 可使用 Serverless Functions 保存服务端密钥：
 
 ```bash
 vercel --prod
-# 环境变量：DEEPSEEK_API_KEY
 ```
 
-## 🛠️ 技术栈
+Required environment variable:
 
-| 类别 | 技术 |
-|------|------|
-| 框架 | React 19 + TypeScript 5.8 |
-| 构建 | Vite 6 |
-| 样式 | Tailwind CSS 4 |
-| 动画 | Motion |
-| AI | DeepSeek API（默认） |
+```text
+DEEPSEEK_API_KEY=...
+```
+
+## API Key Policy
+
+- Personal/local use: using your own DeepSeek quota is acceptable.
+- Public portfolio demo: use strict limits or disable generation if you do not want to pay for anonymous usage.
+- Never commit `.env` or expose `VITE_DEEPSEEK_API_KEY` in a public build.
+- If a key has ever appeared in built frontend assets, rotate it immediately.
+
+## Tech Stack
+
+| Category | Technology |
+|---|---|
+| Framework | React 19 + TypeScript 5.8 |
+| Build | Vite 6 |
+| Styling | Tailwind CSS 4 |
+| Animation | Motion |
+| AI | DeepSeek API by default, multi-provider abstraction |
 | Markdown | react-markdown + remark-gfm |
-| PDF | pdfjs-dist（本地 Worker） |
-| 部署 | GitHub Pages + gh-pages |
+| PDF | pdfjs-dist local worker |
+| Optional proxy | Cloudflare Worker / Vercel Serverless |
 
-## 📁 项目结构
+## Project Structure
 
-```
+```text
 src/
   components/
-    Header.tsx                   — 顶栏：品牌 + 语言/主题切换
-    ApiKeyModal.tsx              — API Key 管理弹窗（本地开发用）
-    ExportMenu.tsx               — 导出菜单
-    layout/MainLayout.tsx        — 响应式网格布局
-    sidebar/UserProfilePanel.tsx — 侧边栏：简历 / PDF上传 / 时间范围 / 语言
+    Header.tsx
+    ApiKeyModal.tsx
+    ExportMenu.tsx
+    layout/MainLayout.tsx
+    sidebar/UserProfilePanel.tsx
     output/
-      ReportOutput.tsx           — 报告容器
-      ReportContent.tsx          — Markdown 渲染
-      ReportEmptyState.tsx       — 空状态
-      ReportLoadingState.tsx     — 加载骨架屏
-      ReportErrorState.tsx       — 错误 + 重试
+      ReportOutput.tsx
+      ReportContent.tsx
+      ReportEmptyState.tsx
+      ReportLoadingState.tsx
+      ReportErrorState.tsx
   hooks/
-    useGenerateReport.ts         — 生成逻辑 + Prompt 构建
-    useLocale.ts                 — i18n
+    useGenerateReport.ts
+    useLocale.ts
   i18n/
-    zh.ts / en.ts / index.ts     — 中英文字典
+    zh.ts / en.ts / index.ts
   utils/
-    providers.ts                 — AI Provider 抽象层
-    pdf.ts                       — PDF 文本提取
-    ThemeContext.tsx              — 暗色模式上下文
+    providers.ts
+    pdf.ts
+    ThemeContext.tsx
   types/
-    report.ts                    — 类型定义
+    report.ts
 api/
-  deepseek.ts                    — Vercel Serverless 代理
+  deepseek.ts
+  gemini.ts
 worker/
-  worker.js                      — Cloudflare Worker 代理
+  worker.js
+  wrangler.toml
 ```
 
-## 🔒 隐私
+## Privacy
 
-- PDF 文件在客户端本地解析，不上传
-- 无后端数据库，无用户追踪
+- PDF files are parsed locally in the browser.
+- No backend database is required.
+- No analytics or user tracking is included.
 
-## 📄 License
+## License
 
 MIT

@@ -1,6 +1,6 @@
 const en: Record<string, string> = {
   'app.title': 'Future Pulse',
-  'app.subtitle': 'AI Intelligence Terminal',
+  'app.subtitle': 'Personal AI Intelligence Cockpit',
   'app.version': 'v3.0',
 
   'header.status.online': 'System Online · DeepSeek Direct',
@@ -85,7 +85,7 @@ const en: Record<string, string> = {
   'common.cancel': 'Cancel',
   'common.save': 'Save',
   'common.loading': 'Loading…',
-  'common.charCount': '{count} chars',
+  'common.charCount': '{count}c',
 };
 
 export default en;

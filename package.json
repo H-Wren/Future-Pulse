@@ -1,6 +1,7 @@
 {
-  "name": "react-example",
+  "name": "future-pulse",
   "private": true,
+  "description": "Personal AI intelligence cockpit for technology trend tracking and opportunity matching.",
   "version": "0.0.0",
   "type": "module",
   "scripts": {
