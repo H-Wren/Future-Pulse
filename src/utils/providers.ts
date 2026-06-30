@@ -192,6 +192,8 @@ async function* deepseekStream(prompt: string, config: ProviderConfig): AsyncIte
       model: config.model,
       messages: [{ role: 'user', content: prompt }],
       stream: true,
+      temperature: 0.6,
+      max_tokens: 4096,
     }),
   });
 

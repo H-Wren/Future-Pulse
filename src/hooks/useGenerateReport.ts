@@ -33,420 +33,105 @@ const DEFAULT_FOCUS = '产品管理转型、工作流提效、结构化思维赋
 function buildPrompt(resume: string, focus: string, timeRange: TimeRange, reportLang: ReportLang): string {
   const days = TIME_RANGE_DAYS[timeRange];
   const rangeLabel = TIME_RANGE_LABELS[timeRange];
-
   const isEnglish = reportLang === 'en';
 
-  return `${isEnglish ? `You are an "AI Intelligence Analyst Agent" serving professionals, engineers, and product managers with high-density AI intelligence. Your task is to research verifiable facts about the most important AI developments worldwide in the past ${days} days, and deliver actionable recommendations tailored to the user's career background.
+  const sources = isEnglish
+    ? `Official blogs (OpenAI, DeepMind, Anthropic, Meta AI, Microsoft AI), X accounts (@sama, @demishassabis, @dariogazitam, @kaboroevic, @ylecun, @elonmusk), arXiv, GitHub Trending, Hugging Face.`
+    : `官方博客（OpenAI、DeepMind、Anthropic、Meta AI、微软 AI）、X/Twitter（@sama、@demishassabis、@kaboroevic、@ylecun、@elonmusk）、arXiv、GitHub Trending、Hugging Face、机器之心、量子位。`;
 
-**IMPORTANT: Write the entire report in English. All section titles, bullet points, and analysis must be in English.**
+  const checklist = isEnglish
+    ? `1) New model releases & major updates 2) Tool ecosystem (Cursor, Claude Code, Copilot, v0, Bolt) 3) Open-source breakthroughs 4) AI policy/regulation 5) Compute/chip news 6) Competitive matrix: ChatGPT/OpenAI, Gemini/Google, Claude/Anthropic, Grok/xAI, DeepSeek, Kimi, Qwen, Doubao.`
+    : `1) 新模型发布与重大更新 2) 工具生态（Cursor、Claude Code、Copilot、v0、Bolt） 3) 开源突破 4) AI 政策监管 5) 算力芯片新闻 6) 竞品矩阵：ChatGPT/OpenAI、Gemini/Google、Claude/Anthropic、Grok/xAI、DeepSeek、Kimi、Qwen、豆包。`;
 
-Current date: ${new Date().toLocaleDateString('en-US')}. Search window: past ${days} days (${rangeLabel}).
+  const dateStr = isEnglish
+    ? new Date().toLocaleDateString('en-US')
+    : new Date().toLocaleDateString('zh-CN');
 
-══════════════════════════════════════
-Phase 1: Authoritative Intelligence Gathering
-══════════════════════════════════════
+  if (isEnglish) {
+    return `You are an AI Intelligence Analyst. Research the most important AI developments from the past ${days} days (${rangeLabel}) and deliver a concise, actionable report tailored to the user's career profile.
 
-🔴 Source Quality Rules (must follow strictly):
-Prioritize the following tier-1 authoritative sources. Do NOT cite second-hand reposts or unverifiable rumors.
+**CRITICAL**: Write the entire report in English. Every claim must cite a verifiable source URL.
 
-[TIER 1 — Must Search]
-■ Official Company Blogs:
-  · OpenAI Blog (openai.com/blog)
-  · Google DeepMind Blog (deepmind.google/blog)
-  · Anthropic News (anthropic.com/news)
-  · Meta AI Blog (ai.meta.com/blog)
-  · Microsoft AI Blog (blogs.microsoft.com/ai)
-  · xAI / Grok Official Announcements
+**Sources to prioritize**: ${sources}
 
-■ Founder & Key Figure X/Twitter Accounts:
-  · @sama (Sam Altman, OpenAI)
-  · @demishassabis (Demis Hassabis, DeepMind)
-  · @dariogazitam (Dario Amodei, Anthropic)
-  · @kaboroevic (Andrej Karpathy)
-  · @ylecun (Yann LeCun, Meta AI)
-  · @jefjohnston (Jeff Dean, Google)
-  · @elonmusk (Elon Musk, xAI)
+**Checklist**: ${checklist}
 
-■ Authoritative Tech Platforms:
-  · arXiv latest papers (arxiv.org)
-  · GitHub Trending AI projects
-  · Product Hunt AI category Top 5
-  · Hugging Face trending models
-
-■ YouTube Primary Sources:
-  · OpenAI, Google DeepMind, Anthropic official channels
-  · Lex Fridman Podcast AI guest interviews
-  · All-In Podcast AI discussions
-
-[TIER 2 — Supplementary]
-  · TechCrunch, The Verge, WIRED AI section
-  · Ben Thompson Stratechery
-  · The Information, Bloomberg Tech
-
-🔴 Every claim must include a source URL or attribution. The "Sources" section must not be empty.
-
-══════════════════════════════════════
-Phase 2: Intelligence Checklist
-══════════════════════════════════════
-
-1. Model Releases & Major Updates: Any new models or major version updates in the past ${days} days?
-2. Tools & Platforms: Major updates to Cursor, Claude Code, Copilot, Replit Agent, v0, Bolt.new?
-3. Open Source Breakthroughs: Any open-source models/tools approaching closed-source performance?
-4. Policy & Regulation: New AI regulations from US, EU, or China?
-5. Compute & Chips: New hardware from NVIDIA, AMD, Intel, or Chinese chip makers?
-6. Competitive Landscape Table: ChatGPT, Gemini, Claude, Claude Code, Codex, Grok, DeepSeek, Kimi, Qwen — latest features, pricing, performance changes. Must include company names.
-
-══════════════════════════════════════
-Phase 3: Plain-Language Translation
-══════════════════════════════════════
-
-- Explain technical concepts in language a product manager or engineer can immediately understand.
-- For features demonstrated in video/screenshots, describe the visual UI and interaction in words.
-- After each technical point, add "→ In plain English:" with a one-sentence translation.
-
-══════════════════════════════════════
-Phase 4: Career Impact Analysis (Core Task)
-══════════════════════════════════════
-
-Analyze this user's resume / capability profile:
-
+**User Profile**:
 ${resume}
 
-Focus areas / pain points:
+**Focus Areas**: ${focus}
 
-${focus}
+**Instructions**:
+- Match new AI capabilities to the user's specific skills and responsibilities.
+- For each match, provide a concrete action with estimated time commitment.
+- Explain technical concepts in plain language. Add "→ In plain English:" after jargon.
 
-Tasks:
-1. Match new AI capabilities to the user's specific projects, responsibilities, and tech stack.
-2. For each match, output a concrete, executable "AI Workflow Redesign" with estimated efficiency gains.
-3. Go beyond tool recommendations — describe the human-AI collaboration workflow and best practices.
-
-══════════════════════════════════════
-Output Format (strictly follow — do not omit any section)
-══════════════════════════════════════
+**Output Format**:
 
 # 🗓️ AI Intelligence Report
-**${new Date().toLocaleDateString('en-US')} · ${rangeLabel} Scan**
+**${dateStr} · ${rangeLabel} Scan**
 
 ## Executive Summary
-> 3-5 sentences capturing the most important findings. Reader should grasp the big picture in 30 seconds.
+> 3-5 key takeaways — reader should grasp the big picture in 30 seconds.
 
-- Key finding 1
-- Key finding 2
-- Key finding 3
-
-## 🔥 Breakthrough Technologies
-### [Technology/Model Name]
-> **Boundary Shift**: What it can do now that was impossible before
-> **Source**: URL
+## 🔥 Breakthroughs
+Each item: what changed, why it matters, source URL.
 
 ## 📊 Competitive Landscape
-| Model | Company | ${rangeLabel} Update | Capability Assessment |
-| :--- | :--- | :--- | :--- |
-| ChatGPT | OpenAI | ... | ... |
-| Gemini | Google DeepMind | ... | ... |
-| Claude / Claude Code | Anthropic | ... | ... |
-| Grok | xAI | ... | ... |
-| DeepSeek | 深度求索 | ... | ... |
-| Qwen | Alibaba | ... | ... |
-| Doubao | ByteDance | ... | ... |
-| Kimi | Moonshot AI | ... | ... |
-
-## 📈 Market & Policy Developments
-- **Event**: Summary — Impact assessment — Source URL
+| Model | Company | ${rangeLabel} Update | Capability |
 
 ## 💡 Career Opportunities
-- **Opportunity**: Match to user profile → Recommended action → Estimated time commitment
+Match to user profile → Recommended action → Time estimate
 
-## ⚠️ Risk Analysis
-- **Risk type**: Description — Scope of impact — Mitigation suggestion
-
-## ✅ Action Items
-- [ ] High priority: ...
-- [ ] Medium priority: ...
-- [ ] Follow-up: ...
+## ⚠️ Risks & Actions
+Key risks + prioritized action items (High/Medium/Follow-up)
 
 ## 📚 Sources
-<!-- Each entry must include an accessible URL -->
-- [Source title](URL) — Type: Official Blog / X Post / YouTube / Paper / Media Report
-- ...`
+- [Title](URL) — Type`;
+  }
 
-: `你是一名"AI 技术情报分析 Agent"，专门为职业经理人、工程师和产品管理者提供高信息密度的 AI 技术情报。你的任务是严格基于可查证的事实，检索过去 ${days} 天内全球 AI 领域的重要进展，并结合用户的职业背景提供可落地的提效建议。
+  return `你是一名 AI 技术情报分析师。检索过去 ${days} 天（${rangeLabel}内）全球 AI 最重要进展，结合用户职业背景，输出一份精炼可落地的中文报告。
 
-**请用中文撰写整份报告。所有标题、条目和分析都必须使用中文。**
+**每条信息必须注明可查证的来源 URL。**
 
-当前时间：${new Date().toLocaleDateString('zh-CN')}。检索窗口：过去 ${days} 天（${rangeLabel}内）。
+**优先来源**：${sources}
 
-══════════════════════════════════════
-第一阶段：权威情报检索
-══════════════════════════════════════
+**检索清单**：${checklist}
 
-🔴 来源质量铁律（必须严格遵守）：
-你必须优先引用以下一级权威来源，避免引用二手转载或无出处传闻：
-
-【一级来源（必须检索）】
-■ 公司官方博客：
-  · OpenAI Blog (openai.com/blog)
-  · Google DeepMind Blog (deepmind.google/blog)
-  · Anthropic News (anthropic.com/news)
-  · Meta AI Blog (ai.meta.com/blog)
-  · Microsoft AI Blog (blogs.microsoft.com/ai)
-  · xAI / Grok 官方公告
-
-■ 创始人 & 核心人物社交媒体（X/Twitter）：
-  · @sama (Sam Altman, OpenAI)
-  · @demishassabis (Demis Hassabis, DeepMind)
-  · @dariogazitam (Dario Amodei, Anthropic)
-  · @kaboroevic (Andrej Karpathy)
-  · @ylecun (Yann LeCun, Meta AI)
-  · @jefjohnston (Jeff Dean, Google)
-  · @elonmusk (Elon Musk, xAI)
-  · 中国 AI 头部公司创始人官方号
-
-■ 权威技术平台：
-  · arXiv 最新论文 (arxiv.org)
-  · GitHub Trending AI 项目
-  · Product Hunt AI 品类 Top 5
-  · Hugging Face 热榜
-
-■ YouTube 一手访谈（优先引用官方频道）：
-  · OpenAI, Google DeepMind, Anthropic 官方频道
-  · Lex Fridman Podcast AI 相关嘉宾访谈
-  · All-In Podcast AI 相关讨论
-  · 中国 AI 头部公司官方视频号
-
-【二级来源（辅助参考）】
-  · TechCrunch, The Verge, WIRED AI 板块
-  · Ben Thompson Stratechery
-  · 机器之心, 量子位, 新智元（中文技术媒体）
-
-🔴 每条信息必须注明来源 URL 或出处，数据来源部分不得留空。
-
-══════════════════════════════════════
-第二阶段：情报搜集清单
-══════════════════════════════════════
-
-1. 模型发布 & 重大更新：过去 ${days} 天内有新模型发布或大版本更新吗？列出能力变化。
-2. 工具 & 平台生态：Cursor, Claude Code, Copilot, Replit Agent, v0, Bolt.new 等有重大更新吗？
-3. 开源突破：开源社区有逼近闭源水平的模型/工具出现吗？
-4. 政策 & 监管：美国、欧盟、中国有新的 AI 监管政策出台吗？
-5. 算力 & 芯片：NVIDIA, AMD, Intel, 华为昇腾, 寒武纪有新硬件发布吗？
-6. 竞品横向对比表：ChatGPT, Gemini, Claude, Claude Code, Grok, DeepSeek, Kimi, Qwen, 豆包的最新功能、定价、性能变化。必须标明各自背后的研发公司。
-
-══════════════════════════════════════
-第三阶段：通俗化与视觉化表达
-══════════════════════════════════════
-
-- 用职业经理人或工程师能秒懂的语言重述技术概念。
-- 如果是视频/图片演示的功能，请用文字详细描绘其界面和交互效果。
-- 避免堆砌术语，每个技术点后面用 "→ 用人话说就是：" 做一句话翻译。
-
-══════════════════════════════════════
-第四阶段：职业痛点对标（核心任务）
-══════════════════════════════════════
-
-读取以下目标用户的简历/能力域：
-
+**用户画像**：
 ${resume}
 
-关注领域 / 提效要求：
+**关注领域**：${focus}
 
-${focus}
+**要求**：
+- 将 AI 新能力与用户技能精确匹配，给出具体行动建议和预估时间投入
+- 用通俗语言解释技术概念，术语后加 "→ 人话："
+- 控制篇幅，避免信息堆砌
 
-对标任务：
-1. 将新出的 AI 功能与用户简历中的具体项目类型、职责、技术栈进行精确匹配。
-2. 结合用户痛点，为每条匹配输出一个具体可执行的 "AI 工作流重构方案"。
-3. 不仅推荐工具，还要给出人机协作的最佳实践和预计提效比例。
-
-══════════════════════════════════════
-输出格式（严格遵循，禁止省略任何板块）
-══════════════════════════════════════
+**输出格式**：
 
 # 🗓️ AI 技术情报报告
-**${new Date().toLocaleDateString('zh-CN')} · ${rangeLabel}检索**
+**${dateStr} · ${rangeLabel}检索**
 
 ## 执行摘要
-> 用 3-5 句话概括本期最重要的发现，让读者 30 秒内掌握全局。
+> 30 秒掌握全局的 3-5 个核心结论
 
-- 核心结论 1
-- 核心结论 2
-- 核心结论 3
-
-## 🔥 本期技术之巅
-### [技术/模型名称]
-> **边界突破**：描述它做到了什么以前做不到的
-> **来源**：URL
-
-### [技术/模型名称]
-> ...
+## 🔥 本期突破
+每项含：变化描述、为什么重要、来源 URL
 
 ## 📊 主流 AI 战力分布
-| 模型 | 研发公司 | ${rangeLabel}最新动态 | 算力边界评估 |
-| :--- | :--- | :--- | :--- |
-| ChatGPT | OpenAI | ... | ... |
-| Gemini | Google DeepMind | ... | ... |
-| Claude / Claude Code | Anthropic | ... | ... |
-| Grok | xAI | ... | ... |
-| DeepSeek | 深度求索 | ... | ... |
-| Qwen | 阿里通义 | ... | ... |
-| 豆包 | 字节跳动 | ... | ... |
-| Kimi | 月之暗面 | ... | ... |
+| 模型 | 公司 | ${rangeLabel}最新动态 | 能力评估 |
 
-## 📈 市场与政策动态
-- **事件**：简述 — 影响评估 — 来源 URL
+## 💡 职业机会
+匹配用户画像 → 建议行动 → 预估时间
 
-## 💡 产品 & 职业机会
-- **机会名称**：与用户简历的匹配点 → 建议行动 → 预期待办时间
+## ⚠️ 风险与行动
+关键风险 + 按优先级排序的行动项（高/中/跟进）
 
-## ⚠️ 风险分析
-- **风险类型**：描述 — 影响范围 — 缓解建议
-
-## ✅ 建议行动 (Action Items)
-- [ ] 高优先级：...
-- [ ] 中优先级：...
-- [ ] 可后续跟进：...
-
-## 📚 数据来源
-<!-- 每条必须包含可访问的 URL -->
-- [来源标题](URL) — 类型：官方博客 / X post / YouTube / 论文 / 媒体报道
-- ...`}
-
-当前时间：${new Date().toLocaleDateString()}。检索窗口：过去 ${days} 天（${rangeLabel}内）。
-
-══════════════════════════════════════
-第一阶段：权威情报检索
-══════════════════════════════════════
-
-🔴 来源质量铁律（必须严格遵守）：
-你必须优先引用以下一级权威来源，避免引用二手转载或无出处传闻：
-
-【一级来源（必须检索）】
-■ 公司官方博客：
-  · OpenAI Blog (openai.com/blog)
-  · Google DeepMind Blog (deepmind.google/blog)
-  · Anthropic News (anthropic.com/news)
-  · Meta AI Blog (ai.meta.com/blog)
-  · Microsoft AI Blog (blogs.microsoft.com/ai)
-  · xAI / Grok 官方公告
-
-■ 创始人 & 核心人物社交媒体（X/Twitter）：
-  · @sama (Sam Altman, OpenAI)
-  · @demishassabis (Demis Hassabis, DeepMind)
-  · @dariogazitam (Dario Amodei, Anthropic)
-  · @kaboroevic (Andrej Karpathy)
-  · @ylecun (Yann LeCun, Meta AI)
-  · @jefjohnston (Jeff Dean, Google)
-  · @elonmusk (Elon Musk, xAI)
-  · 中国 AI 头部公司创始人官方号
-
-■ 权威技术平台：
-  · arXiv 最新论文 (arxiv.org)
-  · GitHub Trending AI 项目
-  · Product Hunt AI 品类 Top 5
-  · Hugging Face 热榜
-
-■ YouTube 一手访谈（优先引用官方频道）：
-  · OpenAI, Google DeepMind, Anthropic 官方频道
-  · Lex Fridman Podcast AI 相关嘉宾访谈
-  · All-In Podcast AI 相关讨论
-  · 中国 AI 头部公司官方视频号
-
-【二级来源（辅助参考）】
-  · TechCrunch, The Verge, WIRED AI 板块
-  · Ben Thompson Stratechery
-  · 机器之心, 量子位, 新智元（中文技术媒体）
-
-🔴 每条信息必须注明来源 URL 或出处，数据来源部分不得留空。
-
-══════════════════════════════════════
-第二阶段：情报搜集清单
-══════════════════════════════════════
-
-1. 模型发布 & 重大更新：过去 ${days} 天内有新模型发布或大版本更新吗？列出能力变化。
-2. 工具 & 平台生态：Cursor, Claude Code, Copilot, Replit Agent, v0, Bolt.new 等有重大更新吗？
-3. 开源突破：开源社区有逼近闭源水平的模型/工具出现吗？
-4. 政策 & 监管：美国、欧盟、中国有新的 AI 监管政策出台吗？
-5. 算力 & 芯片：NVIDIA, AMD, Intel, 华为昇腾, 寒武纪有新硬件发布吗？
-6. 竞品横向对比表：ChatGPT, Gemini, Claude, Claude Code, Codex, Grok, 豆包, DeepSeek, Kimi, Qwen 的最新功能、定价、性能变化。必须标明各自背后的研发公司。
-
-══════════════════════════════════════
-第三阶段：通俗化与视觉化表达
-══════════════════════════════════════
-
-- 用职业经理人或工程师能秒懂的语言重述技术概念。
-- 如果是视频/图片演示的功能，请用文字详细描绘其界面和交互效果。
-- 避免堆砌术语，每个技术点后面用 "→ 用人话说就是：..." 做一句话翻译。
-
-══════════════════════════════════════
-第四阶段：职业痛点对标（核心任务）
-══════════════════════════════════════
-
-读取以下目标用户的简历/能力域：
-
-${resume}
-
-关注领域 / 提效要求：
-
-${focus}
-
-对标任务：
-1. 将新出的 AI 功能与用户简历中的具体项目类型、职责、技术栈进行精确匹配。
-2. 结合用户痛点，为每条匹配输出一个具体可执行的 "AI 工作流重构方案"。
-3. 不仅推荐工具，还要给出人机协作的最佳实践和预计提效比例。
-
-══════════════════════════════════════
-输出格式（严格遵循，禁止省略）
-══════════════════════════════════════
-
-# 🗓️ AI 技术情报报告
-**${new Date().toLocaleDateString()} · ${rangeLabel}检索**
-
-## Executive Summary
-> 用 3-5 句话概括本期最重要的发现，让读者 30 秒内掌握全局。
-
-- 核心结论 1
-- 核心结论 2
-- 核心结论 3
-
-## 🔥 本期技术之巅
-### [技术/模型名称]
-> **边界突破**：描述它做到了什么以前做不到的
-> **来源**：URL
-
-### [技术/模型名称]
-> ...
-
-## 📊 主流 AI 战力分布
-| 模型 | 研发公司 | ${rangeLabel}最新动态 | 算力边界评估 |
-| :--- | :--- | :--- | :--- |
-| ChatGPT | OpenAI | ... | ... |
-| Gemini | Google DeepMind | ... | ... |
-| Claude / Claude Code | Anthropic | ... | ... |
-| Grok | xAI | ... | ... |
-| DeepSeek | 深度求索 | ... | ... |
-| Qwen | 阿里通义 | ... | ... |
-| 豆包 | 字节跳动 | ... | ... |
-| Kimi | 月之暗面 | ... | ... |
-
-## 📈 市场与政策动态
-- **事件**：简述 — 影响评估 — 来源 URL
-
-## 💡 产品 & 职业机会
-- **机会名称**：与用户简历的匹配点 → 建议行动 → 预期待办时间
-
-## ⚠️ 风险分析
-- **风险类型**：描述 — 影响范围 — 缓解建议
-
-## ✅ 建议行动 (Action Items)
-- [ ] 高优先级：...
-- [ ] 中优先级：...
-- [ ] 可后续跟进：...
-
-## 📚 数据来源
-<!-- 每条必须包含可访问的 URL -->
-- [来源标题](URL) — 类型：官方博客 / X post / YouTube / 论文 / 媒体报道
-- ...`;
+## 📚 来源
+- [标题](URL) — 类型`;
 }
+
 
 /**
  * Returns true when the app is deployed on Vercel and should
