@@ -87,8 +87,29 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
       buffer = lines.pop() ?? '';
 
       for (const line of lines) {
-        if (line.trim()) {
-          res.write(line + '\n');
+        const trimmed = line.trim();
+        if (!trimmed || !trimmed.startsWith('data: ')) continue;
+
+        // DeepSeek sends OpenAI-compatible format. Transform to Gemini format
+        // so the client can parse it with the same code.
+        const raw = trimmed.slice(6);
+        if (raw === '[DONE]') {
+          res.write('data: [DONE]\n');
+          continue;
+        }
+
+        try {
+          const chunk = JSON.parse(raw);
+          const text = chunk.choices?.[0]?.delta?.content;
+          if (text) {
+            // Rewrite as Gemini-compatible SSE chunk
+            const geminiChunk = JSON.stringify({
+              candidates: [{ content: { parts: [{ text }] } }],
+            });
+            res.write(`data: ${geminiChunk}\n`);
+          }
+        } catch {
+          // skip unparseable chunks
         }
       }
       // @ts-ignore
