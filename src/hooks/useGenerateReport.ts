@@ -461,23 +461,14 @@ function useServerApi(): boolean {
 }
 
 /**
- * Returns true when the app is running in public mode (via Cloudflare Worker).
- * In public mode, API key UI is hidden and all API calls go through the worker.
+ * Returns true when the app is running in public mode.
+ * In public mode, API key UI is hidden and the API key is baked into the build.
  */
 export function isPublicMode(): boolean {
   try {
-    return typeof (process.env.VITE_WORKER_URL as string) === 'string' &&
-           (process.env.VITE_WORKER_URL as string).length > 0;
+    return (process.env.VITE_PUBLIC_MODE as string) === 'true';
   } catch {
     return false;
-  }
-}
-
-function getWorkerUrl(): string {
-  try {
-    return (process.env.VITE_WORKER_URL as string) || '';
-  } catch {
-    return '';
   }
 }
 
@@ -512,14 +503,11 @@ export function useGenerateReport() {
     if (!resume.trim() || !focus.trim()) return;
 
     const publicMode = isPublicMode();
-    const workerUrl = getWorkerUrl();
     const provider = PROVIDERS[providerId];
 
-    // In public mode: skip API key check, use Cloudflare Worker
+    // In public mode: skip localStorage API key check (key is baked into build)
     if (!publicMode) {
       const apiKey = getStoredApiKey(providerId);
-
-      // Fall back to process.env (injected by Vite) for local dev
       const resolvedKey =
         apiKey
         || (providerId === 'gemini' ? (process.env.GEMINI_API_KEY as string) : '')
@@ -541,23 +529,34 @@ export function useGenerateReport() {
     try {
       const prompt = buildPrompt(resume, focus, timeRange, reportLang);
 
+      // Resolve API key: public mode uses baked-in key, otherwise localStorage or env
+      const apiKey = publicMode
+        ? (process.env.VITE_DEEPSEEK_API_KEY as string) || ''
+        : (getStoredApiKey(providerId)
+            || (providerId === 'gemini' ? (process.env.GEMINI_API_KEY as string) : '')
+            || (providerId === 'deepseek' ? (process.env.VITE_DEEPSEEK_API_KEY as string) : ''));
+
       if (publicMode) {
-        // Public mode: call Cloudflare Worker (no user API key needed)
-        await generateViaServerApi(prompt, `${workerUrl}/api/deepseek`);
+        // Public mode: direct API call with baked-in key (no proxy needed)
+        const stream = provider.generateStream(prompt, {
+          apiKey,
+          model,
+        });
+
+        let fullText = '';
+        for await (const chunk of stream) {
+          if (abortRef.current?.signal.aborted) break;
+          fullText += chunk;
+          setReport(fullText);
+        }
       } else if (useServerApi() && (providerId === 'gemini' || providerId === 'deepseek')) {
         // Use the Vercel serverless API proxy
         const proxyPath = providerId === 'deepseek' ? '/api/deepseek' : '/api/gemini';
         await generateViaServerApi(prompt, proxyPath);
       } else {
-        // Use direct API call (local dev or non-Gemini providers)
-        const apiKey = getStoredApiKey(providerId);
-        const resolvedKey =
-          apiKey
-          || (providerId === 'gemini' ? (process.env.GEMINI_API_KEY as string) : '')
-          || (providerId === 'deepseek' ? (process.env.VITE_DEEPSEEK_API_KEY as string) : '');
-
+        // Use direct API call (local dev or non-proxied providers)
         const stream = provider.generateStream(prompt, {
-          apiKey: resolvedKey,
+          apiKey,
           model,
         });
 
