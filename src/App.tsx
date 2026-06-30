@@ -22,6 +22,8 @@ export default function App() {
     setResume,
     focus,
     setFocus,
+    timeRange,
+    setTimeRange,
     report,
     status,
     error,
@@ -65,12 +67,14 @@ export default function App() {
           <UserProfilePanel
             resume={resume}
             focus={focus}
+            timeRange={timeRange}
             isGenerating={isGenerating}
             providerId={providerId}
             model={model}
             currentProvider={currentProvider}
             onResumeChange={setResume}
             onFocusChange={setFocus}
+            onTimeRangeChange={setTimeRange}
             onGenerate={generateReport}
             onProviderChange={setProviderId}
             onModelChange={setModel}

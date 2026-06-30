@@ -3,86 +3,173 @@ import { PROVIDERS, getStoredApiKey, getStoredModel, storeModel } from '../utils
 import type { ProviderId } from '../utils/providers';
 import type { ReportStatus } from '../types/report';
 
+export type TimeRange = '3d' | '1w' | '1m' | '3m';
+
+export const TIME_RANGE_LABELS: Record<TimeRange, string> = {
+  '3d': '3 天内',
+  '1w': '一周内',
+  '1m': '一个月内',
+  '3m': '三个月内',
+};
+
+const TIME_RANGE_DAYS: Record<TimeRange, number> = {
+  '3d': 3,
+  '1w': 7,
+  '1m': 30,
+  '3m': 90,
+};
+
 const DEFAULT_RESUME = `核心能力与经验：
 1. 具备全链路及项目闭环管理经验，主导多项重点工程。
 2. 技术驱动的产品化能力：整合自动化工具与AI模型重构生产流，实现效能显著提升并解决转码痛点和跨平台协作问题。
 3. 项目管理与跨部门协同：统筹管理多个战略项目，在并行状态下实现从研发、质控到交付的零误差闭环。
 4. 品牌赋能与跨文化产品洞察：擅长国际化产品叙事重构与元数据优化，提升B端采购转化率并推动产品打入顶级机构。
 5. 技能与工具：精通行业工具与专业及合规标准；深入使用与整合 LLMs 等 AI 工具进行业务管线提效。
-（您可以将真实简历内容粘贴至此）`;
+（您可以将真实简历内容粘贴至此，或上传 PDF 自动解析）`;
 
 const DEFAULT_FOCUS = '产品管理转型、工作流提效、结构化思维赋能';
 
-function buildPrompt(resume: string, focus: string): string {
-  return `你是一个部署在 AI Studio 上的"AI 技术与算力边界监控 Agent"。你的任务是利用搜索实时联网功能，每周为用户整理全球最前沿的 AI 进展，并结合用户的简历提供提效建议。
+function buildPrompt(resume: string, focus: string, timeRange: TimeRange): string {
+  const days = TIME_RANGE_DAYS[timeRange];
+  const rangeLabel = TIME_RANGE_LABELS[timeRange];
 
-当前时间：${new Date().toLocaleDateString()}（请重点检索过去 7 天内最新的 AI 动态）。
+  return `你是一名"AI 技术情报分析 Agent"，专门为职业经理人、工程师和产品管理者提供高信息密度的 AI 技术情报。你的任务是严格基于可查证的事实，检索过去 ${days} 天内全球 AI 领域的重要进展，并结合用户的职业背景提供可落地的提效建议。
 
-第一阶段：联网情报收集
-1. 搜索范围：重点检索过去 7 天内 Twitter (X)、YouTube、OpenAI Blog、Google DeepMind Blog、Anthropic News 的热点。
-2. 算力边界定义：不仅要报告"出了什么"，还要解释"它能做什么以前做不到的事"。
-3. 竞品对比表：横向对比 ChatGPT, Gemini, Claude, Claude Code, Codex, Grok, 豆包, DeepSeek。必须标明它们背后的研发公司，并列出本周的核心更新或独家绝活。
+当前时间：${new Date().toLocaleDateString()}。检索窗口：过去 ${days} 天（${rangeLabel}内）。
 
-第二阶段：通俗化表达
-- 视觉化描述：在描述功能时，请用文字详细描绘该功能在视频/图片中呈现的效果。
-- 极简语言：去除学术术语，用职业经理人或工程师能秒懂的语言。
+══════════════════════════════════════
+第一阶段：权威情报检索
+══════════════════════════════════════
 
-第三阶段：职业痛点对标 (核心任务)
-1. 读取以下目标用户的简历或能力域资产：
+🔴 来源质量铁律（必须严格遵守）：
+你必须优先引用以下一级权威来源，避免引用二手转载或无出处传闻：
+
+【一级来源（必须检索）】
+■ 公司官方博客：
+  · OpenAI Blog (openai.com/blog)
+  · Google DeepMind Blog (deepmind.google/blog)
+  · Anthropic News (anthropic.com/news)
+  · Meta AI Blog (ai.meta.com/blog)
+  · Microsoft AI Blog (blogs.microsoft.com/ai)
+  · xAI / Grok 官方公告
+
+■ 创始人 & 核心人物社交媒体（X/Twitter）：
+  · @sama (Sam Altman, OpenAI)
+  · @demishassabis (Demis Hassabis, DeepMind)
+  · @dariogazitam (Dario Amodei, Anthropic)
+  · @kaboroevic (Andrej Karpathy)
+  · @ylecun (Yann LeCun, Meta AI)
+  · @jefjohnston (Jeff Dean, Google)
+  · @elonmusk (Elon Musk, xAI)
+  · 中国 AI 头部公司创始人官方号
+
+■ 权威技术平台：
+  · arXiv 最新论文 (arxiv.org)
+  · GitHub Trending AI 项目
+  · Product Hunt AI 品类 Top 5
+  · Hugging Face 热榜
+
+■ YouTube 一手访谈（优先引用官方频道）：
+  · OpenAI, Google DeepMind, Anthropic 官方频道
+  · Lex Fridman Podcast AI 相关嘉宾访谈
+  · All-In Podcast AI 相关讨论
+  · 中国 AI 头部公司官方视频号
+
+【二级来源（辅助参考）】
+  · TechCrunch, The Verge, WIRED AI 板块
+  · Ben Thompson Stratechery
+  · 机器之心, 量子位, 新智元（中文技术媒体）
+
+🔴 每条信息必须注明来源 URL 或出处，数据来源部分不得留空。
+
+══════════════════════════════════════
+第二阶段：情报搜集清单
+══════════════════════════════════════
+
+1. 模型发布 & 重大更新：过去 ${days} 天内有新模型发布或大版本更新吗？列出能力变化。
+2. 工具 & 平台生态：Cursor, Claude Code, Copilot, Replit Agent, v0, Bolt.new 等有重大更新吗？
+3. 开源突破：开源社区有逼近闭源水平的模型/工具出现吗？
+4. 政策 & 监管：美国、欧盟、中国有新的 AI 监管政策出台吗？
+5. 算力 & 芯片：NVIDIA, AMD, Intel, 华为昇腾, 寒武纪有新硬件发布吗？
+6. 竞品横向对比表：ChatGPT, Gemini, Claude, Claude Code, Codex, Grok, 豆包, DeepSeek, Kimi, Qwen 的最新功能、定价、性能变化。必须标明各自背后的研发公司。
+
+══════════════════════════════════════
+第三阶段：通俗化与视觉化表达
+══════════════════════════════════════
+
+- 用职业经理人或工程师能秒懂的语言重述技术概念。
+- 如果是视频/图片演示的功能，请用文字详细描绘其界面和交互效果。
+- 避免堆砌术语，每个技术点后面用 "→ 用人话说就是：..." 做一句话翻译。
+
+══════════════════════════════════════
+第四阶段：职业痛点对标（核心任务）
+══════════════════════════════════════
+
+读取以下目标用户的简历/能力域：
+
 ${resume}
 
-2. 关注领域 / 提效要求：
+关注领域 / 提效要求：
+
 ${focus}
 
-3. 识别场景：将新出的 AI 功能与用户简历中的具体项目、职责、技术栈进行匹配。结合用户的"提效要求"和痛点诉求，为用户专属定制提效和业务重构方案。
-4. 流程重构：不仅是推荐工具，要给出一个具体的"AI 工作流"。
+对标任务：
+1. 将新出的 AI 功能与用户简历中的具体项目类型、职责、技术栈进行精确匹配。
+2. 结合用户痛点，为每条匹配输出一个具体可执行的 "AI 工作流重构方案"。
+3. 不仅推荐工具，还要给出人机协作的最佳实践和预计提效比例。
 
-输出格式必须严格遵循以下 Markdown 模板 —— 使用清晰的层级结构，避免大段连续文字。
+══════════════════════════════════════
+输出格式（严格遵循，禁止省略）
+══════════════════════════════════════
 
-# 🗓️ AI 算力边界周报
-**{date}**
+# 🗓️ AI 技术情报报告
+**${new Date().toLocaleDateString()} · ${rangeLabel}检索**
 
 ## Executive Summary
+> 用 3-5 句话概括本期最重要的发现，让读者 30 秒内掌握全局。
+
 - 核心结论 1
 - 核心结论 2
 - 核心结论 3
 
-## 本周技术之巅
-### [技术名]
-> **边界突破**：以前做不到，现在能做的
+## 🔥 本期技术之巅
+### [技术/模型名称]
+> **边界突破**：描述它做到了什么以前做不到的
+> **来源**：URL
 
-### [技术名]
+### [技术/模型名称]
 > ...
 
-## 主流 AI 战力分布
-| 模型 | 公司 | 本周更新 | 算力边界 |
+## 📊 主流 AI 战力分布
+| 模型 | 研发公司 | ${rangeLabel}最新动态 | 算力边界评估 |
 | :--- | :--- | :--- | :--- |
-| Gemini | Google | ... | ... |
 | ChatGPT | OpenAI | ... | ... |
-| Claude | Anthropic | ... | ... |
-| Claude Code | Anthropic | ... | ... |
-| Codex | OpenAI | ... | ... |
+| Gemini | Google DeepMind | ... | ... |
+| Claude / Claude Code | Anthropic | ... | ... |
 | Grok | xAI | ... | ... |
-| 豆包 | 字节跳动 | ... | ... |
 | DeepSeek | 深度求索 | ... | ... |
+| Qwen | 阿里通义 | ... | ... |
+| 豆包 | 字节跳动 | ... | ... |
+| Kimi | 月之暗面 | ... | ... |
 
-## 市场动态
-- **事件**：描述 — 影响评估
+## 📈 市场与政策动态
+- **事件**：简述 — 影响评估 — 来源 URL
 
-## 产品机会
-- **机会**：描述 — 建议行动
+## 💡 产品 & 职业机会
+- **机会名称**：与用户简历的匹配点 → 建议行动 → 预期待办时间
 
-## 风险分析
-- **风险**：描述 — 缓解措施
+## ⚠️ 风险分析
+- **风险类型**：描述 — 影响范围 — 缓解建议
 
-## 建议行动
-- [ ] 行动项 1
-- [ ] 行动项 2
-- [ ] 行动项 3
+## ✅ 建议行动 (Action Items)
+- [ ] 高优先级：...
+- [ ] 中优先级：...
+- [ ] 可后续跟进：...
 
-## 数据来源
-- 来源 1
-- 来源 2`;
+## 📚 数据来源
+<!-- 每条必须包含可访问的 URL -->
+- [来源标题](URL) — 类型：官方博客 / X post / YouTube / 论文 / 媒体报道
+- ...`;
 }
 
 /**
@@ -105,6 +192,7 @@ export function useGenerateReport() {
   const [error, setError] = useState('');
   const [providerId, setProviderId] = useState<ProviderId>('deepseek');
   const [model, setModel] = useState(PROVIDERS.deepseek.defaultModel);
+  const [timeRange, setTimeRange] = useState<TimeRange>('1w');
   const abortRef = useRef<AbortController | null>(null);
 
   const handleProviderChange = useCallback((newProvider: ProviderId) => {
@@ -153,7 +241,7 @@ export function useGenerateReport() {
     abortRef.current = new AbortController();
 
     try {
-      const prompt = buildPrompt(resume, focus);
+      const prompt = buildPrompt(resume, focus, timeRange);
       const shouldUseServerApi = useServerApi();
 
       if (shouldUseServerApi && (providerId === 'gemini' || providerId === 'deepseek')) {
@@ -188,7 +276,7 @@ export function useGenerateReport() {
       }
       abortRef.current = null;
     }
-  }, [resume, focus, providerId, model]);
+  }, [resume, focus, providerId, model, timeRange]);
 
   /** Proxy generation through the Vercel serverless function */
   const generateViaServerApi = async (prompt: string, proxyPath: string) => {
@@ -258,6 +346,8 @@ export function useGenerateReport() {
     setResume,
     focus,
     setFocus,
+    timeRange,
+    setTimeRange,
     report,
     status,
     error,
