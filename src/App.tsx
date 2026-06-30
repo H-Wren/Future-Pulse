@@ -24,6 +24,8 @@ export default function App() {
     setFocus,
     timeRange,
     setTimeRange,
+    reportLang,
+    setReportLang,
     report,
     status,
     error,
@@ -68,6 +70,7 @@ export default function App() {
             resume={resume}
             focus={focus}
             timeRange={timeRange}
+            reportLang={reportLang}
             isGenerating={isGenerating}
             providerId={providerId}
             model={model}
@@ -75,6 +78,7 @@ export default function App() {
             onResumeChange={setResume}
             onFocusChange={setFocus}
             onTimeRangeChange={setTimeRange}
+            onReportLangChange={setReportLang}
             onGenerate={generateReport}
             onProviderChange={setProviderId}
             onModelChange={setModel}

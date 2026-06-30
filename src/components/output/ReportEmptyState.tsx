@@ -1,4 +1,5 @@
 import { Newspaper } from 'lucide-react';
+import { t } from '../../i18n';
 
 export default function ReportEmptyState() {
   return (
@@ -7,10 +8,10 @@ export default function ReportEmptyState() {
         <Newspaper className="w-7 h-7 text-text-muted" />
       </div>
       <h3 className="editorial-heading-sm text-text-muted mb-2">
-        情报终端待命
+        {t('output.empty.title')}
       </h3>
       <p className="editorial-body-sm text-text-muted max-w-sm">
-        在左侧输入能力域资产与提效焦点，点击"生成情报报告"即可获取定制化 AI 算力边界分析。
+        {t('output.empty.hint')}
       </p>
       <div className="flex gap-2 mt-6">
         <span className="editorial-tag">Executive Summary</span>

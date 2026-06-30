@@ -1,6 +1,7 @@
 import { motion } from 'motion/react';
 import { Cpu, Moon, Sun, Languages } from 'lucide-react';
 import { useTheme } from '../utils/ThemeContext';
+import { t } from '../i18n';
 
 interface HeaderProps {
   locale: 'zh' | 'en';
@@ -26,13 +27,13 @@ export default function Header({ locale, onToggleLocale }: HeaderProps) {
           <div>
             <h1 className="text-base font-[500] tracking-tight text-text-primary leading-tight"
                 style={{ fontFamily: "'Source Serif 4', serif" }}>
-              Future Pulse
+              {t('app.title')}
               <span className="font-mono text-[0.625rem] tracking-wider uppercase text-text-muted ml-2 align-middle font-[500]">
-                v2
+                {t('app.version')}
               </span>
             </h1>
             <p className="font-mono text-[0.5625rem] tracking-[0.18em] uppercase text-text-muted mt-0.5 font-[500]">
-              AI Intelligence Console
+              {t('app.subtitle')}
             </p>
           </div>
         </div>
@@ -45,7 +46,7 @@ export default function Header({ locale, onToggleLocale }: HeaderProps) {
             aria-label="Toggle language"
           >
             <Languages className="w-3 h-3 inline mr-1 align-middle" />
-            {locale === 'zh' ? 'EN' : '中'}
+            {t('lang.switch')}
           </button>
           <button
             onClick={toggleTheme}
@@ -56,7 +57,7 @@ export default function Header({ locale, onToggleLocale }: HeaderProps) {
           </button>
           <div className="ml-2 font-mono text-[0.5625rem] font-[500] tracking-[0.14em] uppercase text-success border-2 border-success/30 rounded-[4px] px-2.5 py-1 leading-none">
             <span className="inline-block w-1.5 h-1.5 rounded-full bg-success mr-1.5 align-middle animate-pulse" />
-            Online
+            {t('header.status.online')}
           </div>
         </div>
       </div>

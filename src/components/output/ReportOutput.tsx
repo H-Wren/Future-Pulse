@@ -5,6 +5,7 @@ import ReportLoadingState from './ReportLoadingState';
 import ReportErrorState from './ReportErrorState';
 import ReportContent from './ReportContent';
 import ExportMenu from '../ExportMenu';
+import { t } from '../../i18n';
 import type { ReportStatus } from '../../types/report';
 
 interface ReportOutputProps {
@@ -30,7 +31,7 @@ export default function ReportOutput({
       <div className="editorial-topbar">
         <div className="flex items-center gap-2">
           <Newspaper className="w-3.5 h-3.5" />
-          <span>Intelligence Console</span>
+          <span>{t('output.title')}</span>
         </div>
         <div className="flex items-center gap-2">
           <AnimatePresence mode="wait">
@@ -51,12 +52,12 @@ export default function ReportOutput({
               className="font-mono text-[0.5625rem] font-[500] tracking-[0.14em] uppercase text-text-muted hover:text-text-primary px-2 py-1 rounded-[4px] hover:bg-surface-subtle transition-colors"
             >
               <Clock className="w-3 h-3 inline mr-1 align-middle" />
-              历史
+              {t('history.title')}
             </button>
           )}
           {report && !isGenerating && (
             <span className="font-mono text-[0.5rem] font-[500] tracking-[0.18em] uppercase text-success border-2 border-success/30 rounded-[4px] px-2 py-0.5 leading-none">
-              Complete
+              {t('output.complete')}
             </span>
           )}
           {isGenerating && (

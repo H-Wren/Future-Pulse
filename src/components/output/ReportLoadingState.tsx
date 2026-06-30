@@ -1,4 +1,5 @@
 import { Loader2 } from 'lucide-react';
+import { t } from '../../i18n';
 
 export default function ReportLoadingState() {
   return (
@@ -6,7 +7,7 @@ export default function ReportLoadingState() {
       <div className="flex items-center gap-3 mb-8">
         <Loader2 className="w-5 h-5 animate-spin text-primary" />
         <span className="font-mono text-[0.625rem] font-[500] tracking-[0.18em] uppercase text-primary">
-          Processing Intelligence
+          {t('output.loading.title')}
         </span>
       </div>
 

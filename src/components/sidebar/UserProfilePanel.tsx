@@ -1,17 +1,19 @@
 import { useState, useRef } from 'react';
 import { motion } from 'motion/react';
-import { FileText, Target, Zap, Loader2, User, Settings2, Bookmark, Clock, Upload, FileArchive, CheckCircle2, AlertTriangle } from 'lucide-react';
+import { FileText, Target, Zap, Loader2, User, Settings2, Bookmark, Clock, Upload, CheckCircle2, AlertTriangle, Globe } from 'lucide-react';
 import { PROVIDERS } from '../../utils/providers';
 import type { ProviderId } from '../../utils/providers';
 import type { AIProvider } from '../../utils/providers';
-import type { TimeRange } from '../../hooks/useGenerateReport';
+import type { TimeRange, ReportLang } from '../../hooks/useGenerateReport';
 import { TIME_RANGE_LABELS } from '../../hooks/useGenerateReport';
 import { extractTextFromPDF } from '../../utils/pdf';
+import { t } from '../../i18n';
 
 interface UserProfilePanelProps {
   resume: string;
   focus: string;
   timeRange: TimeRange;
+  reportLang: ReportLang;
   isGenerating: boolean;
   providerId: ProviderId;
   model: string;
@@ -19,11 +21,11 @@ interface UserProfilePanelProps {
   onResumeChange: (value: string) => void;
   onFocusChange: (value: string) => void;
   onTimeRangeChange: (value: TimeRange) => void;
+  onReportLangChange: (value: ReportLang) => void;
   onGenerate: () => void;
   onProviderChange: (id: ProviderId) => void;
   onModelChange: (model: string) => void;
   onOpenApiKeys: () => void;
-  t?: (key: string) => string;
 }
 
 type PdfStatus = 'idle' | 'parsing' | 'done' | 'error';
@@ -32,6 +34,7 @@ export default function UserProfilePanel({
   resume,
   focus,
   timeRange,
+  reportLang,
   isGenerating,
   providerId,
   model,
@@ -39,11 +42,11 @@ export default function UserProfilePanel({
   onResumeChange,
   onFocusChange,
   onTimeRangeChange,
+  onReportLangChange,
   onGenerate,
   onProviderChange,
   onModelChange,
   onOpenApiKeys,
-  t,
 }: UserProfilePanelProps) {
   const [pdfStatus, setPdfStatus] = useState<PdfStatus>('idle');
   const [pdfName, setPdfName] = useState('');
@@ -57,13 +60,13 @@ export default function UserProfilePanel({
     if (!file) return;
 
     if (file.type !== 'application/pdf') {
-      setPdfError('仅支持 PDF 文件');
+      setPdfError(t('sidebar.pdf.error'));
       setPdfStatus('error');
       return;
     }
 
     if (file.size > 10 * 1024 * 1024) {
-      setPdfError('PDF 文件不能超过 10MB');
+      setPdfError('PDF too large (max 10MB)');
       setPdfStatus('error');
       return;
     }
@@ -77,19 +80,18 @@ export default function UserProfilePanel({
       const cleaned = text.trim();
 
       if (cleaned.length < 20) {
-        setPdfError('PDF 中未提取到足够的文字，请检查文件或手动粘贴');
+        setPdfError(t('sidebar.pdf.error'));
         setPdfStatus('error');
         return;
       }
 
-      // Prepend PDF content to existing resume text
       const merged = resume.trim()
-        ? `${resume.trim()}\n\n--- 以下来自 PDF: ${file.name} ---\n\n${cleaned}`
+        ? `${resume.trim()}\n\n--- PDF: ${file.name} ---\n\n${cleaned}`
         : cleaned;
       onResumeChange(merged);
       setPdfStatus('done');
     } catch (err: any) {
-      setPdfError(err.message || 'PDF 解析失败，请尝试手动粘贴');
+      setPdfError(err.message || t('sidebar.pdf.error'));
       setPdfStatus('error');
     }
   };
@@ -101,11 +103,11 @@ export default function UserProfilePanel({
       transition={{ duration: 0.4, ease: 'easeOut' }}
       className="bg-surface border-2 border-border rounded-[6px] overflow-hidden"
     >
-      {/* Section header — mono label bar */}
+      {/* Section header */}
       <div className="editorial-topbar">
         <div className="flex items-center gap-2">
           <User className="w-3.5 h-3.5" />
-          <span>Intelligence Console</span>
+          <span>{t('sidebar.header')}</span>
         </div>
         <button
           onClick={onOpenApiKeys}
@@ -113,16 +115,16 @@ export default function UserProfilePanel({
           aria-label="Configure API Keys"
         >
           <Settings2 className="w-3 h-3" />
-          <span>API Key</span>
+          <span>{t('sidebar.apiKey')}</span>
         </button>
       </div>
 
       <div className="p-5 space-y-6">
-        {/* Time Range Selector */}
+        {/* Time Range */}
         <div className="space-y-2.5">
           <label className="editorial-mono-label flex items-center gap-2 text-text-muted">
             <Clock className="w-3 h-3" />
-            情报时间范围
+            {t('sidebar.timeRange.label')}
           </label>
           <div className="flex gap-1.5">
             {(Object.entries(TIME_RANGE_LABELS) as [TimeRange, string][]).map(
@@ -137,18 +139,18 @@ export default function UserProfilePanel({
                       : 'border-border bg-surface text-text-muted hover:border-primary'
                   } disabled:opacity-40`}
                 >
-                  {label}
+                  {t(`timeRange.${key}`)}
                 </button>
               ),
             )}
           </div>
         </div>
 
-        {/* AI Model Selector */}
+        {/* AI Model */}
         <div className="space-y-2.5">
           <label className="editorial-mono-label flex items-center gap-2 text-text-muted">
             <Zap className="w-3 h-3" />
-            {t?.('sidebar.provider.label') ?? 'AI 模型'}
+            {t('sidebar.provider.label')}
           </label>
           <div className="flex gap-2">
             <select
@@ -178,12 +180,12 @@ export default function UserProfilePanel({
 
         <hr className="editorial-rule" />
 
-        {/* Resume — with PDF upload */}
+        {/* Resume + PDF Upload */}
         <div className="space-y-2.5">
           <label className="editorial-mono-label flex items-center justify-between text-text-muted">
             <span className="flex items-center gap-2">
               <FileText className="w-3 h-3" />
-              {t?.('sidebar.resume.label') ?? '能力域资产'}
+              {t('sidebar.resume.label')}
             </span>
             <span className="tabular-nums">{resume.length}c</span>
           </label>
@@ -196,7 +198,7 @@ export default function UserProfilePanel({
               accept=".pdf"
               onChange={handlePdfUpload}
               className="hidden"
-              aria-label="上传 PDF 简历"
+              aria-label="Upload PDF resume"
             />
             <button
               onClick={() => fileInputRef.current?.click()}
@@ -208,13 +210,13 @@ export default function UserProfilePanel({
               ) : (
                 <Upload className="w-3 h-3" />
               )}
-              {pdfStatus === 'done' ? '已解析' : '上传 PDF'}
+              {pdfStatus === 'done' ? t('sidebar.pdf.parsed') : t('sidebar.pdf.upload')}
             </button>
 
             {pdfStatus === 'done' && (
               <span className="flex items-center gap-1 text-[0.625rem] font-mono text-success">
                 <CheckCircle2 className="w-3 h-3" />
-                {pdfName.length > 20 ? pdfName.slice(0, 18) + '…' : pdfName}
+                {pdfName.length > 18 ? pdfName.slice(0, 16) + '…' : pdfName}
               </span>
             )}
 
@@ -231,26 +233,50 @@ export default function UserProfilePanel({
             onChange={(e) => onResumeChange(e.target.value)}
             className="editorial-input resize-none"
             rows={8}
-            placeholder={t?.('sidebar.resume.placeholder') ?? '粘贴文本或点击上方按钮上传 PDF 自动解析…'}
+            placeholder={t('sidebar.resume.placeholder')}
           />
+        </div>
+
+        {/* Report Language */}
+        <div className="space-y-2.5">
+          <label className="editorial-mono-label flex items-center gap-2 text-text-muted">
+            <Globe className="w-3 h-3" />
+            {t('sidebar.reportLang.label')}
+          </label>
+          <div className="flex gap-1.5">
+            {(['zh', 'en'] as ReportLang[]).map((lang) => (
+              <button
+                key={lang}
+                onClick={() => onReportLangChange(lang)}
+                disabled={isGenerating}
+                className={`flex-1 px-2.5 py-1.5 text-[0.6875rem] font-mono font-[500] uppercase tracking-[0.1em] rounded-[4px] border-2 transition-colors ${
+                  reportLang === lang
+                    ? 'border-primary bg-primary text-cream'
+                    : 'border-border bg-surface text-text-muted hover:border-primary'
+                } disabled:opacity-40`}
+              >
+                {t(`reportLang.${lang}`)}
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* Focus */}
         <div className="space-y-2.5">
           <label className="editorial-mono-label flex items-center gap-2 text-text-muted">
             <Target className="w-3 h-3" />
-            {t?.('sidebar.focus.label') ?? '提效焦点'}
+            {t('sidebar.focus.label')}
           </label>
           <textarea
             value={focus}
             onChange={(e) => onFocusChange(e.target.value)}
             className="editorial-input resize-none"
             rows={2}
-            placeholder={t?.('sidebar.focus.placeholder') ?? '例如：产品经理转型、项目管理、品牌效应'}
+            placeholder={t('sidebar.focus.placeholder')}
           />
         </div>
 
-        {/* Generate button */}
+        {/* Generate */}
         <button
           onClick={onGenerate}
           disabled={isGenerating || !isValid}
@@ -259,21 +285,21 @@ export default function UserProfilePanel({
           {isGenerating ? (
             <>
               <Loader2 className="w-4 h-4 animate-spin" />
-              {t?.('sidebar.generating') ?? '情报采集中…'}
+              {t('sidebar.generating')}
             </>
           ) : (
             <>
               <Zap className="w-4 h-4" />
-              {t?.('sidebar.generate') ?? '生成情报报告'}
+              {t('sidebar.generate')}
             </>
           )}
         </button>
 
-        {/* System status */}
+        {/* Footer status */}
         <hr className="editorial-rule" />
         <div className="flex items-center gap-3 text-[0.625rem] font-mono font-[500] tracking-[0.14em] uppercase text-text-muted">
           <Bookmark className="w-3 h-3" />
-          <span>DeepSeek · China Direct</span>
+          <span>{t('sidebar.footer.status')}</span>
         </div>
       </div>
     </motion.div>

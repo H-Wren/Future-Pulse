@@ -1,11 +1,14 @@
 /**
  * Client-side PDF text extraction using pdfjs-dist.
+ * Worker is bundled locally — no CDN dependency, works without VPN.
  */
 import * as pdfjs from 'pdfjs-dist';
 
-// Use CDN worker — no extra build config needed
-pdfjs.GlobalWorkerOptions.workerSrc =
-  `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.mjs`;
+// Bundle the worker with Vite instead of loading from CDN
+pdfjs.GlobalWorkerOptions.workerSrc = new URL(
+  'pdfjs-dist/build/pdf.worker.min.mjs',
+  import.meta.url,
+).toString();
 
 export async function extractTextFromPDF(file: File): Promise<string> {
   const buffer = await file.arrayBuffer();
