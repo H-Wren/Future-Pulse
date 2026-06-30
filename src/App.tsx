@@ -42,7 +42,7 @@ export default function App() {
 
   // Auto-save report when generation completes
   useEffect(() => {
-    if (status === 'complete' && prevStatusRef.current === 'generating' && report) {
+    if (status === 'complete' && report) {
       const saved: SavedReport = {
         id: crypto.randomUUID(),
         createdAt: Date.now(),
@@ -52,10 +52,9 @@ export default function App() {
         focus,
         content: report,
       };
-      saveReport(saved).catch(console.error);
+      saveReport(saved).catch((err) => console.error('[Future Pulse] Save failed:', err));
     }
-    prevStatusRef.current = status;
-  }, [status, report, providerId, model, resume, focus]);
+  }, [status]); // only trigger on status change — avoids duplicate saves
 
   const handleLoadReport = (saved: SavedReport) => {
     setResume(saved.resumeSnippet.length > 0 ? saved.resumeSnippet : '');
