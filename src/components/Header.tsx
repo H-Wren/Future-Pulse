@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { motion } from 'motion/react';
 import { Cpu, Moon, Sun, Languages } from 'lucide-react';
 import { useTheme } from '../utils/ThemeContext';
@@ -10,6 +11,13 @@ interface HeaderProps {
 
 export default function Header({ locale, onToggleLocale }: HeaderProps) {
   const { theme, toggleTheme } = useTheme();
+
+  // Sync document title with locale
+  useEffect(() => {
+    document.title = locale === 'zh'
+      ? 'Future Pulse — AI 技术情报终端'
+      : 'Future Pulse — AI Intelligence Terminal';
+  }, [locale]);
 
   return (
     <motion.header
