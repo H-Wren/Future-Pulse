@@ -1,23 +1,17 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState } from 'react';
 import Header from './components/Header';
 import MainLayout from './components/layout/MainLayout';
 import UserProfilePanel from './components/sidebar/UserProfilePanel';
 import ReportOutput from './components/output/ReportOutput';
 import ApiKeyModal from './components/ApiKeyModal';
-import HistoryPanel from './components/HistoryPanel';
 import { useGenerateReport, isPublicMode } from './hooks/useGenerateReport';
 import { useLocale } from './hooks/useLocale';
-import { saveReport } from './utils/storage';
-import type { SavedReport } from './types/report';
-import type { ReportStatus } from './types/report';
 
 const PUBLIC_MODE = isPublicMode();
 
 export default function App() {
   const { locale, toggleLocale, t } = useLocale();
   const [apiKeyModalOpen, setApiKeyModalOpen] = useState(false);
-  const [historyOpen, setHistoryOpen] = useState(false);
-  const prevStatusRef = useRef<ReportStatus>('idle');
 
   const {
     resume,
@@ -39,27 +33,6 @@ export default function App() {
     generateReport,
     isGenerating,
   } = useGenerateReport();
-
-  // Auto-save report when generation completes
-  useEffect(() => {
-    if (status === 'complete' && report) {
-      const saved: SavedReport = {
-        id: crypto.randomUUID(),
-        createdAt: Date.now(),
-        providerId,
-        model,
-        resumeSnippet: resume.slice(0, 100),
-        focus,
-        content: report,
-      };
-      saveReport(saved).catch((err) => console.error('[Future Pulse] Save failed:', err));
-    }
-  }, [status]); // only trigger on status change — avoids duplicate saves
-
-  const handleLoadReport = (saved: SavedReport) => {
-    setResume(saved.resumeSnippet.length > 0 ? saved.resumeSnippet : '');
-    setFocus(saved.focus);
-  };
 
   return (
     <div className="min-h-screen bg-canvas text-text-primary transition-colors">
@@ -95,7 +68,6 @@ export default function App() {
             error={error}
             isGenerating={isGenerating}
             onRetry={generateReport}
-            onOpenHistory={() => setHistoryOpen(true)}
           />
         }
       />
@@ -107,12 +79,6 @@ export default function App() {
           onSaved={() => {}}
         />
       )}
-
-      <HistoryPanel
-        open={historyOpen}
-        onClose={() => setHistoryOpen(false)}
-        onLoadReport={handleLoadReport}
-      />
     </div>
   );
 }

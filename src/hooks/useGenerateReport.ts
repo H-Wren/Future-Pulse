@@ -30,9 +30,17 @@ const DEFAULT_RESUME = `核心能力与经验：
 
 const DEFAULT_FOCUS = '产品管理转型、工作流提效、结构化思维赋能';
 
+const EN_TIME_RANGE_LABELS: Record<TimeRange, string> = {
+  '3d': '3-Day',
+  '1w': '1-Week',
+  '1m': '1-Month',
+  '3m': '3-Month',
+};
+
 function buildPrompt(resume: string, focus: string, timeRange: TimeRange, reportLang: ReportLang): string {
   const days = TIME_RANGE_DAYS[timeRange];
   const rangeLabel = TIME_RANGE_LABELS[timeRange];
+  const enRangeLabel = EN_TIME_RANGE_LABELS[timeRange];
   const isEnglish = reportLang === 'en';
 
   const sources = isEnglish
@@ -48,9 +56,9 @@ function buildPrompt(resume: string, focus: string, timeRange: TimeRange, report
     : new Date().toLocaleDateString('zh-CN');
 
   if (isEnglish) {
-    return `You are an AI Intelligence Analyst. Research the most important AI developments from the past ${days} days (${rangeLabel}) and deliver a concise, actionable report tailored to the user's career profile.
+    return `You are an AI Intelligence Analyst. Research the most important AI developments from the past ${days} days (${enRangeLabel}) and deliver a concise, actionable report tailored to the user's career profile.
 
-**CRITICAL**: Write the entire report in English. Every claim must cite a verifiable source URL.
+**CRITICAL**: Write the entire report in English. Start directly with the report — do NOT output any preamble, greeting, or acknowledgment. Every claim must cite a verifiable source URL.
 
 **Sources to prioritize**: ${sources}
 
@@ -69,7 +77,7 @@ ${resume}
 **Output Format**:
 
 # 🗓️ AI Intelligence Report
-**${dateStr} · ${rangeLabel} Scan**
+**${dateStr} · ${enRangeLabel} Scan**
 
 ## Executive Summary
 > 3-5 key takeaways — reader should grasp the big picture in 30 seconds.
@@ -78,7 +86,7 @@ ${resume}
 Each item: what changed, why it matters, source URL.
 
 ## 📊 Competitive Landscape
-| Model | Company | ${rangeLabel} Update | Capability |
+| Model | Company | ${enRangeLabel} Update | Capability |
 
 ## 💡 Career Opportunities
 Match to user profile → Recommended action → Time estimate
@@ -91,6 +99,8 @@ Key risks + prioritized action items (High/Medium/Follow-up)
   }
 
   return `你是一名 AI 技术情报分析师。检索过去 ${days} 天（${rangeLabel}内）全球 AI 最重要进展，结合用户职业背景，输出一份精炼可落地的中文报告。
+
+**严禁输出任何开场白、确认语或"收到指令"等应答——直接从"# 🗓️ AI 技术情报报告"标题开始输出！**
 
 **每条信息必须注明可查证的来源 URL。**
 

@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from 'motion/react';
-import { RefreshCw, Clock, Newspaper } from 'lucide-react';
+import { RefreshCw, Newspaper } from 'lucide-react';
 import ReportEmptyState from './ReportEmptyState';
 import ReportLoadingState from './ReportLoadingState';
 import ReportErrorState from './ReportErrorState';
@@ -14,7 +14,6 @@ interface ReportOutputProps {
   error: string;
   isGenerating: boolean;
   onRetry: () => void;
-  onOpenHistory?: () => void;
 }
 
 export default function ReportOutput({
@@ -23,7 +22,6 @@ export default function ReportOutput({
   error,
   isGenerating,
   onRetry,
-  onOpenHistory,
 }: ReportOutputProps) {
   return (
     <div className="bg-surface border-2 border-border rounded-[6px] flex-1 flex flex-col min-h-[600px] overflow-hidden">
@@ -46,15 +44,6 @@ export default function ReportOutput({
               </motion.div>
             )}
           </AnimatePresence>
-          {onOpenHistory && (
-            <button
-              onClick={onOpenHistory}
-              className="font-mono text-[0.5625rem] font-[500] tracking-[0.14em] uppercase text-text-muted hover:text-text-primary px-2 py-1 rounded-[4px] hover:bg-surface-subtle transition-colors"
-            >
-              <Clock className="w-3 h-3 inline mr-1 align-middle" />
-              {t('history.title')}
-            </button>
-          )}
           {report && !isGenerating && (
             <span className="font-mono text-[0.5rem] font-[500] tracking-[0.18em] uppercase text-success border-2 border-success/30 rounded-[4px] px-2 py-0.5 leading-none">
               {t('output.complete')}
