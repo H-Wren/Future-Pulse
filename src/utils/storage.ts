@@ -50,33 +50,38 @@ export async function saveReport(report: SavedReport): Promise<void> {
     const tx = db.transaction(STORE_NAME, 'readwrite');
     const store = tx.objectStore(STORE_NAME);
 
-    // Check count and evict oldest if needed
+    // Get count synchronously within the same transaction
+    const countReq = store.count();
     const count = await new Promise<number>((resolve, reject) => {
-      const req = store.count();
-      req.onsuccess = () => resolve(req.result);
-      req.onerror = () => reject(req.error);
+      countReq.onsuccess = () => resolve(countReq.result);
+      countReq.onerror = () => reject(countReq.error);
     });
 
     if (count >= MAX_REPORTS) {
+      // Evict oldest report
       const index = store.index('createdAt');
       const cursorReq = index.openCursor(null, 'next');
-      await new Promise<void>((resolve, reject) => {
+      const oldestId = await new Promise<string | null>((resolve, reject) => {
         cursorReq.onsuccess = () => {
           const cursor = cursorReq.result;
-          if (cursor) {
-            store.delete(cursor.primaryKey);
-            resolve();
-          } else {
-            resolve();
-          }
+          resolve(cursor ? (cursor.value as SavedReport).id : null);
         };
         cursorReq.onerror = () => reject(cursorReq.error);
       });
+      if (oldestId) {
+        store.delete(oldestId);
+      }
     }
 
     store.put(report);
-    tx.commit();
-  } catch {
+
+    // Wait for transaction to complete
+    await new Promise<void>((resolve, reject) => {
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error);
+    });
+  } catch (err) {
+    console.warn('[Future Pulse] IndexedDB save failed, falling back to localStorage:', err);
     // Fallback to localStorage
     const reports = getFromLS();
     reports.unshift(report);

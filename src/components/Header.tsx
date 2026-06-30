@@ -33,7 +33,7 @@ export default function Header({ locale, onToggleLocale }: HeaderProps) {
             <Cpu className="w-4 h-4 text-primary" />
           </div>
           <div>
-            <h1 className="text-base font-[500] tracking-tight text-text-primary leading-tight"
+            <h1 className="text-base font-[500] tracking-tight text-primary leading-tight"
                 style={{ fontFamily: "'Source Serif 4', serif" }}>
               {t('app.title')}
               <span className="font-mono text-[0.625rem] tracking-wider uppercase text-text-muted ml-2 align-middle font-[500]">
