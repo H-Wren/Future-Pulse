@@ -450,13 +450,34 @@ ${focus}
 
 /**
  * Returns true when the app is deployed on Vercel and should
- * proxy Gemini API calls through the serverless function.
+ * proxy API calls through the serverless function.
  */
 function useServerApi(): boolean {
   try {
     return (process.env.VITE_USE_SERVER_API as string) === 'true';
   } catch {
     return false;
+  }
+}
+
+/**
+ * Returns true when the app is running in public mode (via Cloudflare Worker).
+ * In public mode, API key UI is hidden and all API calls go through the worker.
+ */
+export function isPublicMode(): boolean {
+  try {
+    return typeof (process.env.VITE_WORKER_URL as string) === 'string' &&
+           (process.env.VITE_WORKER_URL as string).length > 0;
+  } catch {
+    return false;
+  }
+}
+
+function getWorkerUrl(): string {
+  try {
+    return (process.env.VITE_WORKER_URL as string) || '';
+  } catch {
+    return '';
   }
 }
 
@@ -490,25 +511,25 @@ export function useGenerateReport() {
   const generateReport = useCallback(async () => {
     if (!resume.trim() || !focus.trim()) return;
 
+    const publicMode = isPublicMode();
+    const workerUrl = getWorkerUrl();
     const provider = PROVIDERS[providerId];
-    const apiKey = getStoredApiKey(providerId);
 
-    // Fall back to process.env (injected by Vite) for local dev
-    const resolvedKey =
-      apiKey
-      || (providerId === 'gemini' ? (process.env.GEMINI_API_KEY as string) : '')
-      || (providerId === 'deepseek' ? (process.env.DEEPSEEK_API_KEY as string) : '');
+    // In public mode: skip API key check, use Cloudflare Worker
+    if (!publicMode) {
+      const apiKey = getStoredApiKey(providerId);
 
-    if (!resolvedKey) {
-      setError(`${provider.name} API Key 未配置。请在 .env 文件中设置，或通过"配置 API Key"输入。`);
-      setStatus('error');
-      return;
-    }
+      // Fall back to process.env (injected by Vite) for local dev
+      const resolvedKey =
+        apiKey
+        || (providerId === 'gemini' ? (process.env.GEMINI_API_KEY as string) : '')
+        || (providerId === 'deepseek' ? (process.env.VITE_DEEPSEEK_API_KEY as string) : '');
 
-    if (!resolvedKey) {
-      setError(`请在设置中配置 ${provider.name} 的 API Key。`);
-      setStatus('error');
-      return;
+      if (!resolvedKey) {
+        setError(`${provider.name} API Key 未配置。请在 .env 文件中设置，或通过"配置 API Key"输入。`);
+        setStatus('error');
+        return;
+      }
     }
 
     setStatus('generating');
@@ -519,14 +540,22 @@ export function useGenerateReport() {
 
     try {
       const prompt = buildPrompt(resume, focus, timeRange, reportLang);
-      const shouldUseServerApi = useServerApi();
 
-      if (shouldUseServerApi && (providerId === 'gemini' || providerId === 'deepseek')) {
+      if (publicMode) {
+        // Public mode: call Cloudflare Worker (no user API key needed)
+        await generateViaServerApi(prompt, `${workerUrl}/api/deepseek`);
+      } else if (useServerApi() && (providerId === 'gemini' || providerId === 'deepseek')) {
         // Use the Vercel serverless API proxy
         const proxyPath = providerId === 'deepseek' ? '/api/deepseek' : '/api/gemini';
         await generateViaServerApi(prompt, proxyPath);
       } else {
         // Use direct API call (local dev or non-Gemini providers)
+        const apiKey = getStoredApiKey(providerId);
+        const resolvedKey =
+          apiKey
+          || (providerId === 'gemini' ? (process.env.GEMINI_API_KEY as string) : '')
+          || (providerId === 'deepseek' ? (process.env.VITE_DEEPSEEK_API_KEY as string) : '');
+
         const stream = provider.generateStream(prompt, {
           apiKey: resolvedKey,
           model,

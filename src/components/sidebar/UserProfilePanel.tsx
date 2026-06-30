@@ -26,6 +26,7 @@ interface UserProfilePanelProps {
   onProviderChange: (id: ProviderId) => void;
   onModelChange: (model: string) => void;
   onOpenApiKeys: () => void;
+  publicMode?: boolean;
 }
 
 type PdfStatus = 'idle' | 'parsing' | 'done' | 'error';
@@ -47,6 +48,7 @@ export default function UserProfilePanel({
   onProviderChange,
   onModelChange,
   onOpenApiKeys,
+  publicMode = false,
 }: UserProfilePanelProps) {
   const [pdfStatus, setPdfStatus] = useState<PdfStatus>('idle');
   const [pdfName, setPdfName] = useState('');
@@ -109,14 +111,16 @@ export default function UserProfilePanel({
           <User className="w-3.5 h-3.5" />
           <span>{t('sidebar.header')}</span>
         </div>
-        <button
-          onClick={onOpenApiKeys}
-          className="flex items-center gap-1 text-text-muted hover:text-primary transition-colors"
-          aria-label="Configure API Keys"
-        >
-          <Settings2 className="w-3 h-3" />
-          <span>{t('sidebar.apiKey')}</span>
-        </button>
+        {!publicMode && (
+          <button
+            onClick={onOpenApiKeys}
+            className="flex items-center gap-1 text-text-muted hover:text-primary transition-colors"
+            aria-label="Configure API Keys"
+          >
+            <Settings2 className="w-3 h-3" />
+            <span>{t('sidebar.apiKey')}</span>
+          </button>
+        )}
       </div>
 
       <div className="p-5 space-y-6">
@@ -146,39 +150,42 @@ export default function UserProfilePanel({
           </div>
         </div>
 
-        {/* AI Model */}
-        <div className="space-y-2.5">
-          <label className="editorial-mono-label flex items-center gap-2 text-text-muted">
-            <Zap className="w-3 h-3" />
-            {t('sidebar.provider.label')}
-          </label>
-          <div className="flex gap-2">
-            <select
-              value={providerId}
-              onChange={(e) => onProviderChange(e.target.value as ProviderId)}
-              className="editorial-select flex-1 min-w-0"
-              disabled={isGenerating}
-            >
-              {(Object.entries(PROVIDERS) as [ProviderId, typeof PROVIDERS[ProviderId]][]).map(
-                ([id, p]) => (
-                  <option key={id} value={id}>{p.name}</option>
-                ),
-              )}
-            </select>
-            <select
-              value={model}
-              onChange={(e) => onModelChange(e.target.value)}
-              className="editorial-select flex-1 min-w-0"
-              disabled={isGenerating}
-            >
-              {currentProvider.models.map((m) => (
-                <option key={m} value={m}>{m}</option>
-              ))}
-            </select>
-          </div>
-        </div>
-
-        <hr className="editorial-rule" />
+        {/* AI Model (hidden in public mode) */}
+        {!publicMode && (
+          <>
+            <div className="space-y-2.5">
+              <label className="editorial-mono-label flex items-center gap-2 text-text-muted">
+                <Zap className="w-3 h-3" />
+                {t('sidebar.provider.label')}
+              </label>
+              <div className="flex gap-2">
+                <select
+                  value={providerId}
+                  onChange={(e) => onProviderChange(e.target.value as ProviderId)}
+                  className="editorial-select flex-1 min-w-0"
+                  disabled={isGenerating}
+                >
+                  {(Object.entries(PROVIDERS) as [ProviderId, typeof PROVIDERS[ProviderId]][]).map(
+                    ([id, p]) => (
+                      <option key={id} value={id}>{p.name}</option>
+                    ),
+                  )}
+                </select>
+                <select
+                  value={model}
+                  onChange={(e) => onModelChange(e.target.value)}
+                  className="editorial-select flex-1 min-w-0"
+                  disabled={isGenerating}
+                >
+                  {currentProvider.models.map((m) => (
+                    <option key={m} value={m}>{m}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            <hr className="editorial-rule" />
+          </>
+        )}
 
         {/* Resume + PDF Upload */}
         <div className="space-y-2.5">

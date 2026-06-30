@@ -5,11 +5,13 @@ import UserProfilePanel from './components/sidebar/UserProfilePanel';
 import ReportOutput from './components/output/ReportOutput';
 import ApiKeyModal from './components/ApiKeyModal';
 import HistoryPanel from './components/HistoryPanel';
-import { useGenerateReport } from './hooks/useGenerateReport';
+import { useGenerateReport, isPublicMode } from './hooks/useGenerateReport';
 import { useLocale } from './hooks/useLocale';
 import { saveReport } from './utils/storage';
 import type { SavedReport } from './types/report';
 import type { ReportStatus } from './types/report';
+
+const PUBLIC_MODE = isPublicMode();
 
 export default function App() {
   const { locale, toggleLocale, t } = useLocale();
@@ -83,6 +85,7 @@ export default function App() {
             onProviderChange={setProviderId}
             onModelChange={setModel}
             onOpenApiKeys={() => setApiKeyModalOpen(true)}
+            publicMode={PUBLIC_MODE}
             t={t}
           />
         }
@@ -98,11 +101,13 @@ export default function App() {
         }
       />
 
-      <ApiKeyModal
-        open={apiKeyModalOpen}
-        onClose={() => setApiKeyModalOpen(false)}
-        onSaved={() => {}}
-      />
+      {!PUBLIC_MODE && (
+        <ApiKeyModal
+          open={apiKeyModalOpen}
+          onClose={() => setApiKeyModalOpen(false)}
+          onSaved={() => {}}
+        />
+      )}
 
       <HistoryPanel
         open={historyOpen}
