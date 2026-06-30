@@ -536,6 +536,20 @@ export function useGenerateReport() {
             || (providerId === 'gemini' ? (process.env.GEMINI_API_KEY as string) : '')
             || (providerId === 'deepseek' ? (process.env.VITE_DEEPSEEK_API_KEY as string) : ''));
 
+      // Quick connectivity test (public mode only)
+      if (publicMode) {
+        try {
+          const testResp = await fetch('https://api.deepseek.com/v1/models', {
+            headers: { Authorization: `Bearer ${apiKey}` },
+            signal: AbortSignal.timeout(8000),
+          });
+          console.log('[Future Pulse] API reachable, status:', testResp.status);
+        } catch (netErr: any) {
+          console.error('[Future Pulse] API unreachable:', netErr.message || netErr);
+          throw new Error(`网络不通：无法连接 DeepSeek API（${netErr.message || '超时'}）。请检查网络或尝试 VPN。`);
+        }
+      }
+
       if (publicMode) {
         // Public mode: direct API call with baked-in key (no proxy needed)
         const stream = provider.generateStream(prompt, {
@@ -572,8 +586,9 @@ export function useGenerateReport() {
         setStatus('complete');
       }
     } catch (err: any) {
-      console.error(err);
-      setError(err.message || '生成报告时发生错误');
+      console.error('[Future Pulse] Generate error:', err);
+      const detail = err?.cause?.message || err?.message || String(err);
+      setError(detail || '生成报告时发生错误');
       setStatus('error');
     } finally {
       if (abortRef.current?.signal.aborted) {
