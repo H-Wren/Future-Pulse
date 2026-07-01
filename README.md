@@ -4,6 +4,8 @@ Future Pulse 是一个个人 AI 技术情报与机会匹配工作台。它不是
 
 > Portfolio note: this project demonstrates AI workflow productization, frontend implementation, prompt architecture, bilingual UI, deployment tradeoff handling, and a calm editorial interface system.
 
+![Future Pulse Screenshot](assets/screenshot.png)
+
 ## Product Positioning
 
 普通 LLM 已经可以生成“一份 AI 周报”。Future Pulse 的价值不在于替代聊天框，而在于把一个长期重复的个人工作流固定下来：
