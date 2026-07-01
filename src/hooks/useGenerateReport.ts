@@ -175,6 +175,32 @@ function getWorkerUrl(): string {
   }
 }
 
+function formatGenerationError(detail: string, workerUrl = ''): string {
+  if (
+    detail.includes('Failed to fetch')
+    || detail.includes('NetworkError')
+    || detail.includes('Load failed')
+    || detail.includes('Could not connect')
+  ) {
+    return workerUrl
+      ? `Cloudflare Worker 无法访问：${workerUrl}。请检查 Worker 是否已部署、workers.dev 是否可访问，或改用自定义域名。`
+      : '生成代理服务无法访问。请检查 Worker / Serverless API 是否已部署。';
+  }
+
+  if (
+    detail.includes('DEEPSEEK_API_KEY')
+    || detail.includes('API key not configured')
+  ) {
+    return '服务端 DeepSeek API Key 未配置。请在 Cloudflare Worker Secrets 中设置 DEEPSEEK_API_KEY，然后重新部署 Worker。';
+  }
+
+  if (detail.includes('DeepSeek API error')) {
+    return `DeepSeek 接口返回错误：${detail}`;
+  }
+
+  return detail || '生成报告时发生错误';
+}
+
 export function useGenerateReport() {
   const [resume, setResume] = useState(DEFAULT_RESUME);
   const [focus, setFocus] = useState(DEFAULT_FOCUS);
@@ -268,7 +294,7 @@ export function useGenerateReport() {
     } catch (err: any) {
       console.error('[Future Pulse] Generate error:', err);
       const detail = err?.cause?.message || err?.message || String(err);
-      setError(detail || '生成报告时发生错误');
+      setError(formatGenerationError(detail, publicMode ? getWorkerUrl() : ''));
       setStatus('error');
     } finally {
       if (abortRef.current?.signal.aborted) {

@@ -1,10 +1,11 @@
 /**
  * Future Pulse — Cloudflare Worker (DeepSeek API Proxy)
  *
- * Proxies requests to api.deepseek.com with the server-side API key embedded.
+ * Proxies requests to api.deepseek.com with a server-side API key.
  * Handles CORS so the public GitHub Pages site can call it.
  *
  * Deploy: npx wrangler deploy
+ * Secret: npx wrangler secret put DEEPSEEK_API_KEY
  */
 
 const DEEPSEEK_API_URL = 'https://api.deepseek.com/v1/chat/completions';
@@ -13,15 +14,20 @@ const ALLOWED_ORIGINS = [
   'http://localhost:3000',
   'http://localhost:5173',
 ];
+const API_KEY_PLACEHOLDER = 'YOUR_DEEPSEEK_API_KEY_HERE';
 
 function corsHeaders(request) {
   const origin = request.headers.get('Origin') || '';
   const allowOrigin = ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0];
   return {
     'Access-Control-Allow-Origin': allowOrigin,
-    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type',
   };
+}
+
+function hasValidApiKey(env) {
+  return Boolean(env.DEEPSEEK_API_KEY && env.DEEPSEEK_API_KEY !== API_KEY_PLACEHOLDER);
 }
 
 export default {
@@ -36,6 +42,17 @@ export default {
       });
     }
 
+    if (request.method === 'GET' && url.pathname.endsWith('/health')) {
+      return new Response(JSON.stringify({
+        ok: true,
+        service: 'future-pulse-worker',
+        hasDeepSeekKey: hasValidApiKey(env),
+      }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json', ...corsHeaders(request) },
+      });
+    }
+
     // Only accept POST to /api/deepseek
     if (request.method !== 'POST' || !url.pathname.endsWith('/api/deepseek')) {
       return new Response(JSON.stringify({ error: 'Not found' }), {
@@ -44,13 +61,13 @@ export default {
       });
     }
 
-    const apiKey = env.DEEPSEEK_API_KEY;
-    if (!apiKey) {
-      return new Response(JSON.stringify({ error: 'Server: API key not configured' }), {
+    if (!hasValidApiKey(env)) {
+      return new Response(JSON.stringify({ error: 'Server: DEEPSEEK_API_KEY is not configured as a Cloudflare secret' }), {
         status: 500,
         headers: { 'Content-Type': 'application/json', ...corsHeaders(request) },
       });
     }
+    const apiKey = env.DEEPSEEK_API_KEY;
 
     try {
       const { prompt, model = 'deepseek-chat' } = await request.json();

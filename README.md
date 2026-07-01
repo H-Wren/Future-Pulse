@@ -71,6 +71,22 @@ npm run build
 
 Then publish `dist/` to the `gh-pages` branch.
 
+Cloudflare Worker setup:
+
+```bash
+cd worker
+npx wrangler secret put DEEPSEEK_API_KEY
+npx wrangler deploy
+```
+
+After deployment, verify the proxy without spending model tokens:
+
+```bash
+curl https://your-worker.workers.dev/health
+```
+
+`hasDeepSeekKey` should be `true`. Do not put `DEEPSEEK_API_KEY` in `wrangler.toml`.
+
 ### Vercel
 
 Vercel 可使用 Serverless Functions 保存服务端密钥：
