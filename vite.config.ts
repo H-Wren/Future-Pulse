@@ -13,7 +13,6 @@ export default defineConfig(({mode}) => {
       'process.env.VITE_DEEPSEEK_API_KEY': JSON.stringify(env.VITE_DEEPSEEK_API_KEY),
       'process.env.VITE_USE_SERVER_API': JSON.stringify(env.VITE_USE_SERVER_API),
       'process.env.VITE_PUBLIC_MODE': JSON.stringify(env.VITE_PUBLIC_MODE || ''),
-      'process.env.VITE_WORKER_URL': JSON.stringify(env.VITE_WORKER_URL || ''),
     },
     resolve: {
       alias: {

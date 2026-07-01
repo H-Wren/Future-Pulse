@@ -1,12 +1,10 @@
-import { useState, useRef } from 'react';
 import { motion } from 'motion/react';
-import { FileText, Target, Zap, Loader2, User, Settings2, Bookmark, Clock, Upload, CheckCircle2, AlertTriangle, Globe } from 'lucide-react';
+import { FileText, Target, Zap, Loader2, User, Settings2, Bookmark, Clock, Globe } from 'lucide-react';
 import { PROVIDERS } from '../../utils/providers';
 import type { ProviderId } from '../../utils/providers';
 import type { AIProvider } from '../../utils/providers';
 import type { TimeRange, ReportLang } from '../../hooks/useGenerateReport';
 import { TIME_RANGE_LABELS } from '../../hooks/useGenerateReport';
-import { extractTextFromPDF } from '../../utils/pdf';
 import { t } from '../../i18n';
 
 interface UserProfilePanelProps {
@@ -29,8 +27,6 @@ interface UserProfilePanelProps {
   publicMode?: boolean;
 }
 
-type PdfStatus = 'idle' | 'parsing' | 'done' | 'error';
-
 export default function UserProfilePanel({
   resume,
   focus,
@@ -50,53 +46,7 @@ export default function UserProfilePanel({
   onOpenApiKeys,
   publicMode = false,
 }: UserProfilePanelProps) {
-  const [pdfStatus, setPdfStatus] = useState<PdfStatus>('idle');
-  const [pdfName, setPdfName] = useState('');
-  const [pdfError, setPdfError] = useState('');
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
   const isValid = resume.trim().length >= 20 && focus.trim().length >= 2;
-
-  const handlePdfUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    if (file.type !== 'application/pdf') {
-      setPdfError(t('sidebar.pdf.error'));
-      setPdfStatus('error');
-      return;
-    }
-
-    if (file.size > 10 * 1024 * 1024) {
-      setPdfError('PDF too large (max 10MB)');
-      setPdfStatus('error');
-      return;
-    }
-
-    setPdfName(file.name);
-    setPdfStatus('parsing');
-    setPdfError('');
-
-    try {
-      const text = await extractTextFromPDF(file);
-      const cleaned = text.trim();
-
-      if (cleaned.length < 20) {
-        setPdfError(t('sidebar.pdf.error'));
-        setPdfStatus('error');
-        return;
-      }
-
-      const merged = resume.trim()
-        ? `${resume.trim()}\n\n--- PDF: ${file.name} ---\n\n${cleaned}`
-        : cleaned;
-      onResumeChange(merged);
-      setPdfStatus('done');
-    } catch (err: any) {
-      setPdfError(err.message || t('sidebar.pdf.error'));
-      setPdfStatus('error');
-    }
-  };
 
   return (
     <motion.div
@@ -187,7 +137,7 @@ export default function UserProfilePanel({
           </>
         )}
 
-        {/* Resume + PDF Upload */}
+        {/* Resume */}
         <div className="space-y-2.5">
           <label className="editorial-mono-label flex items-center justify-between text-text-muted">
             <span className="flex items-center gap-2">
@@ -196,44 +146,6 @@ export default function UserProfilePanel({
             </span>
             <span className="tabular-nums">{t('common.charCount', { count: resume.length })}</span>
           </label>
-
-          {/* PDF Upload Row */}
-          <div className="flex items-center gap-2">
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept=".pdf"
-              onChange={handlePdfUpload}
-              className="hidden"
-              aria-label="Upload PDF resume"
-            />
-            <button
-              onClick={() => fileInputRef.current?.click()}
-              disabled={isGenerating || pdfStatus === 'parsing'}
-              className="editorial-btn-ghost flex items-center gap-1.5 text-[0.6875rem] py-1 px-2.5"
-            >
-              {pdfStatus === 'parsing' ? (
-                <Loader2 className="w-3 h-3 animate-spin" />
-              ) : (
-                <Upload className="w-3 h-3" />
-              )}
-              {pdfStatus === 'done' ? t('sidebar.pdf.parsed') : t('sidebar.pdf.upload')}
-            </button>
-
-            {pdfStatus === 'done' && (
-              <span className="flex items-center gap-1 text-[0.625rem] font-mono text-success">
-                <CheckCircle2 className="w-3 h-3" />
-                {pdfName.length > 18 ? pdfName.slice(0, 16) + '…' : pdfName}
-              </span>
-            )}
-
-            {pdfStatus === 'error' && (
-              <span className="flex items-center gap-1 text-[0.625rem] font-mono text-danger">
-                <AlertTriangle className="w-3 h-3" />
-                {pdfError}
-              </span>
-            )}
-          </div>
 
           <textarea
             value={resume}

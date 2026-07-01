@@ -2,7 +2,7 @@
 
 Future Pulse 是一个个人 AI 技术情报与机会匹配工作台。它不是面向大众的 AI 周报 SaaS，而是把固定信源、个人能力画像、时间范围和报告结构产品化，用来持续追踪 AI 技术变化，并把变化转译成可执行的学习、项目和职业行动。
 
-> Portfolio note: this project demonstrates AI workflow productization, frontend implementation, prompt architecture, local PDF parsing, bilingual UI, deployment security, and a calm editorial interface system.
+> Portfolio note: this project demonstrates AI workflow productization, frontend implementation, prompt architecture, bilingual UI, deployment tradeoff handling, and a calm editorial interface system.
 
 ## Product Positioning
 
@@ -11,14 +11,14 @@ Future Pulse 是一个个人 AI 技术情报与机会匹配工作台。它不是
 - 保存个人能力画像、关注方向和报告结构
 - 按 3 天 / 1 周 / 1 个月 / 3 个月生成不同粒度的技术情报
 - 将 AI 进展映射到个人机会、能力差距和下一步行动
-- 支持中英文报告、PDF 简历本地解析和 Markdown 导出
+- 支持中英文报告、能力画像编辑和 Markdown 导出
 - 用统一 UI 降低每次整理情报的上下文切换成本
 
 ## What It Demonstrates
 
 - **AI workflow productization**: 把 prompt、用户画像、时间范围和输出格式封装成可重复使用的工作台
 - **Personalization layer**: 简历 / 技能 / 关注领域参与报告生成，而不是通用新闻摘要
-- **Local-first privacy**: PDF 在浏览器本地解析，无数据库、无用户追踪
+- **Local-first privacy**: 个人画像在浏览器端编辑，无数据库、无用户追踪
 - **Provider abstraction**: DeepSeek / Gemini / OpenAI / Claude / Moonshot 的统一调用接口
 - **Secure deployment boundary**: 公开部署不把 API Key 打进前端；需要通过 Worker 或 Serverless 代理
 - **Editorial interface design**: 森林绿、暖纸色、衬线标题和紧凑控制台布局
@@ -26,7 +26,7 @@ Future Pulse 是一个个人 AI 技术情报与机会匹配工作台。它不是
 ## Features
 
 - 权威信源提示：官方博客、创始人 X/Twitter、arXiv、GitHub Trending、Hugging Face
-- PDF 简历上传：客户端本地解析，提取后合并到个人画像
+- 能力画像输入：粘贴简历、项目经历、技能栈和当前目标
 - 时间范围选择：3 天 / 1 周 / 1 个月 / 3 个月
 - 双语报告：中文 / English
 - 流式输出：实时查看生成过程
@@ -120,7 +120,6 @@ DEEPSEEK_API_KEY=...
 | Animation | Motion |
 | AI | DeepSeek API by default, multi-provider abstraction |
 | Markdown | react-markdown + remark-gfm |
-| PDF | pdfjs-dist local worker |
 | Optional proxy | Cloudflare Worker / Vercel Serverless |
 
 ## Project Structure
@@ -146,7 +145,6 @@ src/
     zh.ts / en.ts / index.ts
   utils/
     providers.ts
-    pdf.ts
     ThemeContext.tsx
   types/
     report.ts
@@ -160,7 +158,7 @@ worker/
 
 ## Privacy
 
-- PDF files are parsed locally in the browser.
+- User profile text stays in the browser unless submitted for report generation.
 - No backend database is required.
 - No analytics or user tracking is included.
 
