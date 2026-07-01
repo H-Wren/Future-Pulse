@@ -106,12 +106,15 @@ export default {
       // Transform OpenAI SSE → Gemini SSE format (matching Vercel proxy behavior)
       const { readable, writable } = new TransformStream();
       const writer = writable.getWriter();
+      const decoder = new TextDecoder();
+      const encoder = new TextEncoder();
+      let buffer = '';
 
       deepseekResp.body.pipeTo(new WritableStream({
         write(chunk) {
-          const text = new TextDecoder().decode(chunk, { stream: true });
-          const lines = text.split('\n');
-          const encoder = new TextEncoder();
+          buffer += decoder.decode(chunk, { stream: true });
+          const lines = buffer.split('\n');
+          buffer = lines.pop() ?? '';
 
           for (const line of lines) {
             const trimmed = line.trim();

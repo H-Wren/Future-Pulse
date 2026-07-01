@@ -157,7 +157,7 @@ function useServerApi(): boolean {
 
 /**
  * Returns true when the app is running in public mode.
- * In public mode, API key UI is hidden and requests go through the Worker proxy.
+ * In public mode, API key UI is hidden and the API key is baked into the build.
  */
 export function isPublicMode(): boolean {
   try {
@@ -165,40 +165,6 @@ export function isPublicMode(): boolean {
   } catch {
     return false;
   }
-}
-
-function getWorkerUrl(): string {
-  try {
-    return ((process.env.VITE_WORKER_URL as string) || '').replace(/\/$/, '');
-  } catch {
-    return '';
-  }
-}
-
-function formatGenerationError(detail: string, workerUrl = ''): string {
-  if (
-    detail.includes('Failed to fetch')
-    || detail.includes('NetworkError')
-    || detail.includes('Load failed')
-    || detail.includes('Could not connect')
-  ) {
-    return workerUrl
-      ? `Cloudflare Worker 无法访问：${workerUrl}。请检查 Worker 是否已部署、workers.dev 是否可访问，或改用自定义域名。`
-      : '生成代理服务无法访问。请检查 Worker / Serverless API 是否已部署。';
-  }
-
-  if (
-    detail.includes('DEEPSEEK_API_KEY')
-    || detail.includes('API key not configured')
-  ) {
-    return '服务端 DeepSeek API Key 未配置。请在 Cloudflare Worker Secrets 中设置 DEEPSEEK_API_KEY，然后重新部署 Worker。';
-  }
-
-  if (detail.includes('DeepSeek API error')) {
-    return `DeepSeek 接口返回错误：${detail}`;
-  }
-
-  return detail || '生成报告时发生错误';
 }
 
 export function useGenerateReport() {
@@ -239,7 +205,8 @@ export function useGenerateReport() {
       const apiKey = getStoredApiKey(providerId);
       const resolvedKey =
         apiKey
-        || (providerId === 'gemini' ? (process.env.GEMINI_API_KEY as string) : '');
+        || (providerId === 'gemini' ? (process.env.GEMINI_API_KEY as string) : '')
+        || (providerId === 'deepseek' ? (process.env.VITE_DEEPSEEK_API_KEY as string) : '');
 
       if (!resolvedKey) {
         setError(`${provider.name} API Key 未配置。请在 .env 文件中设置，或通过"配置 API Key"输入。`);
@@ -257,18 +224,30 @@ export function useGenerateReport() {
     try {
       const prompt = buildPrompt(resume, focus, timeRange, reportLang);
 
-      // Resolve API key for local development. Public mode uses the Worker proxy.
+      // Resolve API key: public mode uses baked-in key, otherwise localStorage or env
       const apiKey = publicMode
-        ? ''
+        ? (process.env.VITE_DEEPSEEK_API_KEY as string) || ''
         : (getStoredApiKey(providerId)
-            || (providerId === 'gemini' ? (process.env.GEMINI_API_KEY as string) : ''));
+            || (providerId === 'gemini' ? (process.env.GEMINI_API_KEY as string) : '')
+            || (providerId === 'deepseek' ? (process.env.VITE_DEEPSEEK_API_KEY as string) : ''));
+
+      if (!apiKey) {
+        throw new Error('DeepSeek API Key 未配置。请在构建环境中设置 VITE_DEEPSEEK_API_KEY。');
+      }
 
       if (publicMode) {
-        const workerUrl = getWorkerUrl();
-        if (!workerUrl) {
-          throw new Error('公开模式未配置 VITE_WORKER_URL，无法通过 Cloudflare Worker 生成报告。');
+        // Public mode: direct API call with baked-in key (no proxy needed)
+        const stream = provider.generateStream(prompt, {
+          apiKey,
+          model,
+        });
+
+        let fullText = '';
+        for await (const chunk of stream) {
+          if (abortRef.current?.signal.aborted) break;
+          fullText += chunk;
+          setReport(fullText);
         }
-        await generateViaServerApi(prompt, `${workerUrl}/api/deepseek`);
       } else if (useServerApi() && (providerId === 'gemini' || providerId === 'deepseek')) {
         // Use the Vercel serverless API proxy
         const proxyPath = providerId === 'deepseek' ? '/api/deepseek' : '/api/gemini';
@@ -294,7 +273,7 @@ export function useGenerateReport() {
     } catch (err: any) {
       console.error('[Future Pulse] Generate error:', err);
       const detail = err?.cause?.message || err?.message || String(err);
-      setError(formatGenerationError(detail, publicMode ? getWorkerUrl() : ''));
+      setError(detail || '生成报告时发生错误');
       setStatus('error');
     } finally {
       if (abortRef.current?.signal.aborted) {

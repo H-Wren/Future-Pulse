@@ -59,19 +59,21 @@ This is primarily a personal workflow and portfolio project. If deployed publicl
 
 ### GitHub Pages
 
-GitHub Pages 是静态托管，不能安全保存服务端密钥。公开部署时应使用 Cloudflare Worker 代理：
+GitHub Pages 是静态托管。当前作品集演示版使用 DeepSeek 直连模式，避免依赖 `workers.dev`：
 
 ```bash
 # .env
 VITE_PUBLIC_MODE=true
-VITE_WORKER_URL=https://your-worker.workers.dev
+VITE_DEEPSEEK_API_KEY=sk-...
 
 npm run build
 ```
 
 Then publish `dist/` to the `gh-pages` branch.
 
-Cloudflare Worker setup:
+This direct mode is intended for a personal portfolio demo. It avoids the `workers.dev` availability problem, but the browser bundle can be inspected, so use a limited and rotatable key.
+
+Optional Cloudflare Worker fallback:
 
 ```bash
 cd worker
@@ -105,8 +107,8 @@ DEEPSEEK_API_KEY=...
 
 - Personal/local use: using your own DeepSeek quota is acceptable.
 - Public portfolio demo: use strict limits or disable generation if you do not want to pay for anonymous usage.
-- Never commit `.env` or expose `VITE_DEEPSEEK_API_KEY` in a public build.
-- If a key has ever appeared in built frontend assets, rotate it immediately.
+- Never commit `.env`.
+- In GitHub Pages direct mode, `VITE_DEEPSEEK_API_KEY` is embedded in the frontend bundle; use a limited key and rotate it when needed.
 
 ## Tech Stack
 
