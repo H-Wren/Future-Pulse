@@ -36,6 +36,22 @@ Future Pulse 是一个个人 AI 技术情报与机会匹配工作台。它不是
 - 暗色模式：自动跟随系统 + 手动切换
 - API Key 管理：本地开发可在浏览器端保存自己的 Provider Key
 
+## Screenshots
+
+<table>
+<tr>
+  <td><img src="assets/screenshot-2.png" alt="Main Interface" width="100%"></td>
+  <td><img src="assets/screenshot-3.png" alt="Report Generation" width="100%"></td>
+</tr>
+<tr>
+  <td><img src="assets/screenshot-4.png" alt="Dark Mode" width="100%"></td>
+  <td><img src="assets/screenshot-5.png" alt="Bilingual Support" width="100%"></td>
+</tr>
+<tr>
+  <td colspan="2"><img src="assets/screenshot-6.png" alt="Full Report View" width="100%"></td>
+</tr>
+</table>
+
 ## Local Development
 
 ```bash
